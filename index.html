@@ -1,12 +1,11 @@
 <!DOCTYPE html>
-<html class="light" lang="pt-BR">
+<html lang="pt-BR">
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
 <title>Minha Agenda</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Caveat:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 </head>
 <body>
@@ -14,45 +13,91 @@
 <div id="app" class="flex items-center justify-center" style="min-height:100vh;color:#727782">Carregando...</div>
 
 <style>
-  body { font-family: 'Inter', sans-serif; background-color: #faf9fa; margin: 0; -webkit-user-select: none; user-select: none; }
-  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-  .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background-color: #E2E8F0; }
-  .calendar-day {
-    background-color: white; min-height: 100px; padding: 4px; cursor: pointer; overflow: hidden;
-    background-image: linear-gradient(#f1f5f9 1px, transparent 1px); background-size: 100% 24px;
-    transition: background-color 0.2s;
+  * { box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #f5f5f7; margin: 0; }
+  .material-symbols-outlined { font-variation-settings:'FILL'0,'wght'400,'GRAD'0,'opsz'24; vertical-align:middle; }
+
+  .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
+  .cal-cell {
+    background:#fff; min-height:90px; padding:4px 6px; cursor:pointer; border-radius:4px;
+    transition:background 0.15s; position:relative;
   }
-  .calendar-day:hover { background-color: #F8FAFC; }
-  .calendar-day.today { background-color: #fdf2f8; }
-  .calendar-day.other-month { opacity: 0.35; background-color: #f1f5f9; }
-  .sidebar-paper {
-    background-image: linear-gradient(90deg, transparent 39px, #abced4 39px, #abced4 41px, transparent 41px),
-      linear-gradient(#e1e1e1 0.1em, transparent 0.1em); background-size: 100% 1.5rem; background-color: #ffffff;
+  .cal-cell:hover { background:#f0f0f2; }
+  .cal-cell.today { background:#fdf2f8; }
+  .cal-cell.other { opacity:0.3; }
+  .cal-num { font-size:13px; font-weight:600; }
+  .cal-num.today { color:#b7006f; }
+
+  .period-dots { display:flex; gap:3px; margin-top:2px; flex-wrap:wrap; }
+  .p-dot { width:7px; height:7px; border-radius:50%; }
+  .p-dot.manha { background:#b7006f; }
+  .p-dot.tarde { background:#e67e22; }
+  .p-dot.noite { background:#3b82f6; }
+
+  .day-view { max-width:640px; margin:0 auto; padding:16px; }
+  .period-section { margin-bottom:24px; }
+  .period-header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:8px 12px; border-radius:8px; margin-bottom:8px;
   }
-  .scribble-border { border-bottom: 2px solid #333; border-radius: 255px 15px 225px 15px/15px 225px 15px 255px; }
-  .handwriting-zone { background-color: #fcfdff; background-image: linear-gradient(#e2e7ff 1px, transparent 1px); background-size: 100% 2rem; line-height: 2rem; }
-  .paper-card {
-    background-image: linear-gradient(#e1e5f0 1px, transparent 1px); background-size: 100% 2rem;
-    background-color: #fff; box-shadow: 2px 2px 5px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; transform: rotate(-0.5deg);
+  .period-header.manha { background:#fdf2f8; }
+  .period-header.tarde { background:#fff7ed; }
+  .period-header.noite { background:#eff6ff; }
+  .period-title { font-size:15px; font-weight:700; letter-spacing:0.5px; }
+  .period-title.manha { color:#b7006f; }
+  .period-title.tarde { color:#e67e22; }
+  .period-title.noite { color:#3b82f6; }
+
+  .task-row {
+    display:flex; align-items:center; gap:10px; padding:6px 12px; min-height:52px;
+    border-bottom:1px solid #f0f0f2; transition:background 0.15s; cursor:pointer;
   }
-  .paper-card:nth-child(even) { transform: rotate(0.5deg); background-color: #fdfdfd; }
-  .canvas-pad { touch-action: none; cursor: crosshair; display: block; border-radius: 0.5rem; width: 100%; }
-  .view { display: none; }
-  .view.active { display: flex; }
-  .fade-in { animation: fadeIn 0.2s ease; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-  .nav-item.active { background-color: #dfe3e8; color: #1b1c1d; border-radius: 0.5rem; }
-  #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1b1c1d; color: white; padding: 12px 24px; border-radius: 12px; font-size: 14px; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
-  #toast.show { opacity: 1; }
-  .handwriting-stroke { display: inline-block; vertical-align: middle; border-radius: 4px; }
-  @media (max-width: 1024px) {
-    .sidebar { width: 72px !important; }
-    .sidebar .nav-label, .sidebar .app-title, .sidebar .app-subtitle, .sidebar .user-info { display: none; }
-    .sidebar .nav-item { justify-content: center; padding: 12px; }
-    .sidebar .create-btn span { display: none; }
-    .sidebar .user-section { display: none; }
-    main { margin-left: 72px !important; }
-    #today-agenda { display: none !important; }
+  .task-row:last-child { border-bottom:none; }
+  .task-row:hover { background:#fafafa; }
+  .task-row.done { opacity:0.5; }
+  .task-row.failed { opacity:0.6; }
+  .task-row.failed .task-img { filter:grayscale(0.6); }
+
+  .status-circle {
+    width:28px; height:28px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-size:16px; font-weight:700; transition:all 0.2s;
+    border:2px solid #ccc; cursor:pointer;
+  }
+  .status-circle.pending { border-color:#ccc; color:transparent; }
+  .status-circle.done { background:#22c55e; border-color:#22c55e; color:#fff; }
+  .status-circle.failed { background:#ef4444; border-color:#ef4444; color:#fff; }
+
+  .task-img { max-height:36px; width:auto; border-radius:3px; }
+
+  .add-area { padding:8px 12px; }
+  .add-pad-wrap { border:2px dashed #d1d5db; border-radius:8px; padding:4px; background:#fcfdff; margin-bottom:8px; }
+  .add-actions { display:flex; gap:8px; justify-content:flex-end; }
+
+  .back-btn {
+    display:inline-flex; align-items:center; gap:4px; padding:6px 12px;
+    background:transparent; border:none; cursor:pointer; font-size:14px; font-weight:500;
+    color:#666; border-radius:8px; transition:background 0.15s;
+  }
+  .back-btn:hover { background:#e8e8ec; }
+
+  .date-title { font-size:22px; font-weight:700; color:#1b1c1d; }
+  .empty-state { text-align:center; padding:16px; color:#999; font-size:14px; }
+
+  /* Canvas handwriting pad */
+  .hpad { touch-action:none; cursor:crosshair; display:block; border-radius:6px; width:100%; }
+
+  #toast {
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+    background:#1b1c1d; color:#fff; padding:10px 20px; border-radius:10px;
+    font-size:13px; z-index:999; opacity:0; transition:opacity 0.3s; pointer-events:none;
+  }
+  #toast.show { opacity:1; }
+
+  @media (max-width:640px) {
+    .cal-cell { min-height:68px; padding:3px 4px; }
+    .cal-num { font-size:12px; }
+    .p-dot { width:6px; height:6px; }
   }
 </style>
 
@@ -64,605 +109,313 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 let userId = null
-let currentMonth = new Date().getMonth()
-let currentYear = new Date().getFullYear()
-let events = []
-let tasks = []
+let curMonth = new Date().getMonth()
+let curYear = new Date().getFullYear()
+let allTasks = []
+let dayTasks = []
+let selectedDate = ''
 
 const $ = id => document.getElementById(id)
-const toast = msg => { const t = $('toast'); if (!t) return; t.textContent = msg; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2500) }
+const toast = msg => { const t = $('toast'); if (!t) return; t.textContent = msg; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2000) }
 
-function showView(id) {
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'))
-  const el = $(id); if (el) el.classList.add('active')
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'))
-  const navMap = { 'calendar-view': 'nav-dashboard', 'event-view': 'nav-event', 'tasks-view': 'nav-tasks' }
-  const navEl = $(navMap[id]); if (navEl) navEl.classList.add('active')
-}
-
-// ===================== HANDWRITING PAD =====================
+// =============== HANDWRITING PAD ===============
 class HandwritingPad {
-  constructor(container, opts = {}) {
-    this.container = container
-    this.height = opts.height || 80
-    this.bgColor = opts.bgColor || '#fcfdff'
-    this.lineColor = opts.color || '#1b1c1d'
-    this.lineW = opts.lineWidth || 3
-    this.ruleColor = '#e2e7ff'
+  constructor(container, opts={}) {
+    this.c = container; this.h = opts.h || 64; this._drawn = false
     this.dpr = window.devicePixelRatio || 1
-    this.clearable = opts.clearable !== false
-    this._strokes = []
-    this._hasDrawn = false
-
-    this.wrapper = document.createElement('div')
-    this.wrapper.style.cssText = `position:relative;width:100%;height:${this.height}px;border-radius:0.5rem;overflow:hidden;border:1px solid #e5e7eb;background:${this.bgColor}`
-
-    this.canvas = document.createElement('canvas')
-    this.canvas.className = 'canvas-pad'
-    this.ctx = this.canvas.getContext('2d')
+    this.wr = document.createElement('div')
+    this.wr.style.cssText = `position:relative;width:100%;height:${this.h}px;background:#fcfdff;border-radius:6px;overflow:hidden`
+    this.ca = document.createElement('canvas'); this.ca.className = 'hpad'
+    this.ctx = this.ca.getContext('2d')
     this._resize()
     this._drawBg()
-    this.wrapper.appendChild(this.canvas)
-
-    if (this.clearable) {
-      this.clearBtn = document.createElement('button')
-      this.clearBtn.type = 'button'
-      this.clearBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px">undo</span>'
-      this.clearBtn.style.cssText = 'position:absolute;top:4px;right:4px;background:rgba(255,255,255,0.85);border:1px solid #e5e7eb;border-radius:6px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity 0.2s;z-index:2;color:#666'
-      this.wrapper.appendChild(this.clearBtn)
-      this.wrapper.addEventListener('mouseenter', () => { this.clearBtn.style.opacity = '1' })
-      this.wrapper.addEventListener('mouseleave', () => { if (!this._hasDrawn) this.clearBtn.style.opacity = '0' })
-      this.clearBtn.onclick = () => this.clear()
+    this.wr.appendChild(this.ca)
+    if (opts.clearable !== false) {
+      this.cb = document.createElement('button')
+      this.cb.type = 'button'
+      this.cb.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px">undo</span>'
+      this.cb.style.cssText = 'position:absolute;top:3px;right:3px;background:rgba(255,255,255,0.85);border:1px solid #e5e7eb;border-radius:4px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity 0.2s;z-index:2;color:#888'
+      this.wr.appendChild(this.cb)
+      this.wr.addEventListener('mouseenter',()=>{this.cb.style.opacity='1'})
+      this.wr.addEventListener('mouseleave',()=>{if(!this._drawn)this.cb.style.opacity='0'})
+      this.cb.onclick = ()=>this.clear()
     }
-
-    container.appendChild(this.wrapper)
-
+    container.appendChild(this.wr)
     this._drawing = false
-    this.canvas.addEventListener('pointerdown', e => this._start(e))
-    this.canvas.addEventListener('pointermove', e => this._move(e))
-    this.canvas.addEventListener('pointerup', e => this._end(e))
-    this.canvas.addEventListener('pointerleave', e => this._end(e))
-    this.canvas.addEventListener('pointercancel', e => this._end(e))
-    this.canvas.style.touchAction = 'none'
+    this.ca.addEventListener('pointerdown', e => this._s(e))
+    this.ca.addEventListener('pointermove', e => this._m(e))
+    this.ca.addEventListener('pointerup', e => this._e(e))
+    this.ca.addEventListener('pointerleave', e => this._e(e))
+    this.ca.addEventListener('pointercancel', e => this._e(e))
+    this.ca.style.touchAction = 'none'
   }
-
   _resize() {
-    const rect = this.container.getBoundingClientRect()
-    const w = rect.width || 600
-    this.canvas.width = w * this.dpr
-    this.canvas.height = this.height * this.dpr
-    this.canvas.style.height = this.height + 'px'
+    const r = this.c.getBoundingClientRect()
+    const w = r.width || 600
+    this.ca.width = w * this.dpr; this.ca.height = this.h * this.dpr
+    this.ca.style.height = this.h + 'px'
     this.ctx.scale(this.dpr, this.dpr)
-    this.w = w
-    this.h = this.height
+    this.w = w; this.ha = this.h
   }
-
   _drawBg() {
     const ctx = this.ctx
-    ctx.save()
-    ctx.scale(1/this.dpr, 1/this.dpr)
-    ctx.fillStyle = this.bgColor
-    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
-    ctx.strokeStyle = this.ruleColor
-    ctx.lineWidth = 0.5
-    const lineH = 12
-    for (let y = lineH * this.dpr; y < this.canvas.height; y += lineH * this.dpr) {
-      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(this.canvas.width, y); ctx.stroke()
-    }
+    ctx.save(); ctx.scale(1/this.dpr, 1/this.dpr)
+    ctx.fillStyle = '#fcfdff'; ctx.fillRect(0,0,this.ca.width,this.ca.height)
+    ctx.strokeStyle = '#e2e7ff'; ctx.lineWidth = 0.5
+    for (let y=16*this.dpr; y<this.ca.height; y+=16*this.dpr) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(this.ca.width,y); ctx.stroke() }
     ctx.restore()
   }
+  _s(e) { e.preventDefault(); this._drawing=true; this._drawn=true; if(this.cb)this.cb.style.opacity='1';
+    this.ctx.save(); this.ctx.scale(1/this.dpr,1/this.dpr);
+    const p=this._p(e); this.ctx.beginPath(); this.ctx.moveTo(p.x*this.dpr,p.y*this.dpr);
+    this.ctx.strokeStyle='#1b1c1d'; this.ctx.lineWidth=(e.pressure>0?e.pressure*5:2)*this.dpr
+    this.ctx.lineCap='round'; this.ctx.lineJoin='round'; this.ctx.restore()
+  }
+  _m(e) { if(!this._drawing)return; e.preventDefault();
+    const p=this._p(e), w=(e.pressure>0?e.pressure*5:2)
+    this.ctx.save(); this.ctx.scale(1/this.dpr,1/this.dpr)
+    this.ctx.strokeStyle='#1b1c1d'; this.ctx.lineWidth=w*this.dpr
+    this.ctx.lineCap='round'; this.ctx.lineJoin='round'
+    this.ctx.lineTo(p.x*this.dpr,p.y*this.dpr); this.ctx.stroke(); this.ctx.restore()
+  }
+  _e(e) { if(!this._drawing)return; this._drawing=false }
+  _p(e) { const r=this.ca.getBoundingClientRect(); return {x:e.clientX-r.left,y:e.clientY-r.top} }
+  toDataURL() { return this._drawn ? this.ca.toDataURL('image/png') : '' }
+  clear() { this._drawn=false; this._drawBg(); if(this.cb&&!this.wr.matches(':hover'))this.cb.style.opacity='0' }
+  load(d) { if(!d)return; const i=new Image(); i.onload=()=>{this._drawn=true;if(this.cb)this.cb.style.opacity='1';
+    this.ctx.save(); this.ctx.scale(1/this.dpr,1/this.dpr); this.ctx.drawImage(i,0,0,this.w,this.ha); this.ctx.restore()}; i.src=d }
+  isEmpty() { return !this._drawn }
+}
 
-  _start(e) {
-    e.preventDefault()
-    this._drawing = true
-    this._hasDrawn = true
-    if (this.clearBtn) this.clearBtn.style.opacity = '1'
-    const p = this._pos(e)
-    this._stroke = [p]
-    this.ctx.save()
-    this.ctx.scale(1/this.dpr, 1/this.dpr)
-    this.ctx.beginPath()
-    this.ctx.moveTo(p.x * this.dpr, p.y * this.dpr)
-    this.ctx.strokeStyle = this.lineColor
-    this.ctx.lineWidth = (e.pressure && e.pressure > 0 ? e.pressure * this.lineW * 2 : this.lineW) * this.dpr
-    this.ctx.lineCap = 'round'
-    this.ctx.lineJoin = 'round'
-    this.ctx.restore()
+// =============== STATE HELPERS ===============
+const STATUS_NEXT = { pending:'done', done:'failed', failed:'pending' }
+const STATUS_ICON = { pending:'', done:'✓', failed:'✗' }
+const PERIOD_ICON = { manha:'🌅', tarde:'☀️', noite:'🌙' }
+const PERIOD_LABEL = { manha:'MANHA', tarde:'TARDE', noite:'NOITE' }
+const PERIOD_COLOR = { manha:'#b7006f', tarde:'#e67e22', noite:'#3b82f6' }
+
+function fmtDate(d) {
+  const meses = ['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
+  const dias = ['Domingo','Segunda-feira','Terca-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sabado']
+  return `${dias[d.getDay()]}, ${d.getDate()} de ${meses[d.getMonth()]} de ${d.getFullYear()}`
+}
+function dateStr(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+}
+
+// =============== CALENDAR ===============
+function renderCalendar() {
+  const meses = ['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
+  $('cal-title').textContent = `${meses[curMonth]} ${curYear}`
+
+  const first = new Date(curYear, curMonth, 1).getDay()
+  const days = new Date(curYear, curMonth+1, 0).getDate()
+  const prevDays = new Date(curYear, curMonth, 0).getDate()
+  const hoje = new Date()
+  let html = ''
+
+  for (let d=prevDays-first+1; d<=prevDays; d++) html += `<div class="cal-cell other"><div class="cal-num">${d}</div></div>`
+
+  for (let d=1; d<=days; d++) {
+    const ehHoje = d===hoje.getDate() && curMonth===hoje.getMonth() && curYear===hoje.getFullYear()
+    const ds = `${curYear}-${String(curMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`
+    const td = allTasks.filter(t => t.task_date === ds)
+    const tem = { manha: td.some(t=>t.period==='manha'), tarde: td.some(t=>t.period==='tarde'), noite: td.some(t=>t.period==='noite') }
+    html += `<div class="cal-cell ${ehHoje?'today':''}" data-date="${ds}">
+      <div class="cal-num ${ehHoje?'today':''}">${d}</div>
+      ${(tem.manha||tem.tarde||tem.noite) ? `<div class="period-dots">${tem.manha?'<div class="p-dot manha"></div>':''}${tem.tarde?'<div class="p-dot tarde"></div>':''}${tem.noite?'<div class="p-dot noite"></div>':''}</div>` : ''}
+    </div>`
   }
 
-  _move(e) {
-    if (!this._drawing) return
-    e.preventDefault()
-    const p = this._pos(e)
-    this._stroke.push(p)
-    const pressure = e.pressure && e.pressure > 0 ? e.pressure * this.lineW * 2 : this.lineW
-    this.ctx.save()
-    this.ctx.scale(1/this.dpr, 1/this.dpr)
-    this.ctx.strokeStyle = this.lineColor
-    this.ctx.lineWidth = pressure * this.dpr
-    this.ctx.lineCap = 'round'
-    this.ctx.lineJoin = 'round'
-    this.ctx.lineTo(p.x * this.dpr, p.y * this.dpr)
-    this.ctx.stroke()
-    this.ctx.restore()
-  }
+  const total = first + days
+  const rest = total%7===0 ? 0 : 7-(total%7)
+  for (let i=1; i<=rest; i++) html += `<div class="cal-cell other"><div class="cal-num">${i}</div></div>`
 
-  _end(e) {
-    if (!this._drawing) return
-    this._drawing = false
-    this._strokes.push(this._stroke)
-  }
+  $('cal-grid').innerHTML = html
 
-  _pos(e) {
-    const rect = this.canvas.getBoundingClientRect()
-    return { x: e.clientX - rect.left, y: e.clientY - rect.top }
-  }
+  $('cal-grid').querySelectorAll('.cal-cell').forEach(el => {
+    el.addEventListener('click', () => {
+      selectedDate = el.dataset.date
+      showDayView(selectedDate)
+    })
+  })
+}
 
-  toDataURL() {
-    if (!this._hasDrawn) return ''
-    return this.canvas.toDataURL('image/png')
-  }
+// =============== DAY VIEW ===============
+async function showDayView(date) {
+  selectedDate = date
+  $('view-title').textContent = 'Dia'
+  $('calendar-view').classList.remove('active')
+  $('day-view-wrap').classList.add('active')
+  await loadDayTasks(date)
+}
 
-  clear() {
-    this._hasDrawn = false
-    this._strokes = []
-    this._drawBg()
-    if (this.clearBtn && !this.wrapper.matches(':hover')) this.clearBtn.style.opacity = '0'
-  }
+function backToCalendar() {
+  $('day-view-wrap').classList.remove('active')
+  $('calendar-view').classList.add('active')
+  $('view-title').textContent = 'Agenda'
+  renderCalendar()
+}
 
-  loadFromDataURL(dataURL) {
-    if (!dataURL || dataURL === '') return
-    const img = new Image()
-    img.onload = () => {
-      this._hasDrawn = true
-      if (this.clearBtn) this.clearBtn.style.opacity = '1'
-      this.ctx.save()
-      this.ctx.scale(1/this.dpr, 1/this.dpr)
-      this.ctx.drawImage(img, 0, 0, this.w, this.h)
-      this.ctx.restore()
+async function loadDayTasks(date) {
+  const partes = date.split('-')
+  const dt = new Date(+partes[0], +partes[1]-1, +partes[2])
+  $('day-date').textContent = fmtDate(dt)
+
+  if (!userId) return
+  const { data, error } = await supabase.from('tasks').select('*')
+    .eq('user_id', userId).eq('task_date', date).order('created_at')
+  if (!error && data) dayTasks = data; else dayTasks = []
+
+  for (const p of ['manha','tarde','noite']) {
+    const container = $(`tasks-${p}`)
+    const lista = dayTasks.filter(t => t.period === p)
+    if (lista.length === 0) {
+      container.innerHTML = `<div class="empty-state">Nenhuma tarefa</div>`
+    } else {
+      container.innerHTML = lista.map(t => `
+        <div class="task-row ${t.status}" data-id="${t.id}">
+          <div class="status-circle ${t.status}" data-id="${t.id}">${STATUS_ICON[t.status]}</div>
+          ${t.drawing ? `<img class="task-img" src="${t.drawing}" draggable="false">` : '<span style="font-size:13px;color:#999">(sem escrita)</span>'}
+        </div>
+      `).join('')
     }
-    img.src = dataURL
+    // Status toggle
+    container.querySelectorAll('.status-circle').forEach(el => {
+      el.addEventListener('click', async (e) => {
+        e.stopPropagation()
+        const id = el.dataset.id
+        const task = dayTasks.find(t => t.id === id)
+        if (!task) return
+        const next = STATUS_NEXT[task.status]
+        const { error } = await supabase.from('tasks').update({ status: next }).eq('id', id)
+        if (!error) await loadDayTasks(date)
+      })
+    })
   }
-
-  isEmpty() { return !this._hasDrawn }
 }
 
-function padImgHTML(dataURL, maxH) {
-  if (!dataURL) return ''
-  return `<img class="handwriting-stroke" src="${dataURL}" style="max-height:${maxH||40}px;width:auto;border-radius:2px">`
+// =============== ADD TASK ===============
+function setupAddTask(period) {
+  const btn = $(`add-btn-${period}`)
+  if (!btn) return
+  btn.onclick = () => {
+    const container = $(`tasks-${period}`)
+    if ($('inline-pad')) return
+
+    const wrap = document.createElement('div')
+    wrap.id = 'inline-pad'
+    wrap.className = 'add-area'
+    wrap.innerHTML = `
+      <div class="add-pad-wrap"><div id="pad-inline"></div></div>
+      <div class="add-actions">
+        <button id="inline-cancel" class="back-btn">Cancelar</button>
+        <button id="inline-save" style="padding:6px 16px;background:#b7006f;color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:13px">Salvar</button>
+      </div>`
+
+    if (container.querySelector('.empty-state')) container.innerHTML = ''
+    container.appendChild(wrap)
+
+    const pad = new HandwritingPad($('pad-inline'), { h: 80, clearable: true })
+    setTimeout(() => pad.ca.focus(), 100)
+
+    $('inline-cancel').onclick = () => wrap.remove()
+    $('inline-save').onclick = async () => {
+      if (pad.isEmpty()) { toast('Escreva a tarefa com sua caneta'); return }
+      const { error } = await supabase.from('tasks').insert({
+        user_id: userId, task_date: selectedDate,
+        period, drawing: pad.toDataURL(), status: 'pending'
+      })
+      if (error) { toast('Erro: '+error.message); return }
+      toast('Tarefa adicionada!')
+      wrap.remove()
+      await loadDayTasks(selectedDate)
+    }
+  }
 }
 
-// ===================== RENDER APP =====================
+// =============== RENDER APP ===============
 function renderApp() {
   $('app').innerHTML = `
-    <div id="app-screen" class="flex h-screen overflow-hidden bg-[#faf9fa]">
-      <aside class="sidebar fixed left-0 top-0 h-full w-[280px] bg-white flex flex-col p-4 gap-3 border-r border-[#c2c6d2]/30 z-50" style="transition:width 0.2s">
-        <div class="px-4 py-4">
-          <h1 class="app-title text-2xl font-bold text-[#b7006f]" style="font-family:sans-serif">Minha Agenda</h1>
-          <p class="app-subtitle text-xs text-[#424751] opacity-70">Escrita Manual</p>
+    <div id="app-screen" style="max-width:720px;margin:0 auto;height:100vh;display:flex;flex-direction:column;background:#fff;box-shadow:0 0 20px rgba(0,0,0,0.04);border-radius:0">
+      <header style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #f0f0f2;flex-shrink:0;background:#fff">
+        <h1 id="view-title" style="font-size:18px;font-weight:700;color:#b7006f;margin:0">Agenda</h1>
+        <span style="font-size:13px;color:#999">Escrita Manual</span>
+      </header>
+
+      <!-- CALENDAR VIEW -->
+      <div id="calendar-view" class="active" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#fafafa;border-bottom:1px solid #f0f0f2">
+          <div style="display:flex;align-items:center;gap:8px">
+            <button id="prev-month" class="back-btn" style="padding:4px 8px"><span class="material-symbols-outlined">chevron_left</span></button>
+            <span id="cal-title" style="font-size:16px;font-weight:600;min-width:160px;text-align:center"></span>
+            <button id="next-month" class="back-btn" style="padding:4px 8px"><span class="material-symbols-outlined">chevron_right</span></button>
+          </div>
+          <button id="today-btn" class="back-btn" style="font-size:13px">Hoje</button>
         </div>
-        <button id="nav-event" class="nav-item create-btn flex items-center gap-3 mx-2 px-4 py-3 bg-[#b7006f] text-white rounded-xl font-semibold hover:opacity-90 active:scale-95 transition-all shadow-md" style="border:none;cursor:pointer">
-          <span class="material-symbols-outlined">edit_note</span>
-          <span>Escrever Evento</span>
-        </button>
-        <nav class="flex flex-col gap-1 px-2 mt-2">
-          <a id="nav-dashboard" class="nav-item flex items-center gap-3 px-4 py-3 text-[#5a5f63] hover:bg-[#e9e8e9] rounded-lg transition-all cursor-pointer active">
-            <span class="material-symbols-outlined" style="font-variation-settings:'FILL'1">calendar_today</span>
-            <span class="nav-label">Dashboard</span>
-          </a>
-          <a id="nav-tasks" class="nav-item flex items-center gap-3 px-4 py-3 text-[#5a5f63] hover:bg-[#e9e8e9] rounded-lg transition-all cursor-pointer">
-            <span class="material-symbols-outlined">task_alt</span>
-            <span class="nav-label">Tarefas</span>
-          </a>
-          <a id="nav-settings" class="nav-item flex items-center gap-3 px-4 py-3 text-[#5a5f63] hover:bg-[#e9e8e9] rounded-lg transition-all cursor-pointer">
-            <span class="material-symbols-outlined">settings</span>
-            <span class="nav-label">Config</span>
-          </a>
-        </nav>
-        <div class="user-section mt-auto p-4 flex items-center gap-3 border-t border-[#c2c6d2]/30">
-          <div class="w-10 h-10 rounded-full bg-[#b7006f] flex items-center justify-center text-white font-bold text-lg">A</div>
-          <div class="user-info"><p class="text-sm font-semibold text-[#1b1c1d]">Escrita Manual</p><p class="text-xs text-[#424751]">Apple Pencil</p></div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:4px 8px;background:#fafafa;border-bottom:1px solid #f0f0f2">
+          ${['Dom','Seg','Ter','Qua','Qui','Sex','Sab'].map(d => `<div style="text-align:center;font-size:11px;font-weight:600;color:#999;padding:4px 0">${d}</div>`).join('')}
         </div>
-      </aside>
-      <main class="flex-1 ml-[280px] h-screen flex flex-col overflow-hidden" style="transition:margin-left 0.2s">
-        <header class="h-16 bg-white/80 backdrop-blur-md flex items-center justify-between px-6 border-b border-[#c2c6d2]/20 flex-shrink-0">
-          <h2 id="view-title" class="text-xl font-bold text-[#1b1c1d]">Dashboard</h2>
-          <div class="flex items-center gap-4">
-            <span class="text-sm text-[#727782] hidden md:inline">✏️ Escreva com sua caneta</span>
-          </div>
-        </header>
-        <div class="flex-1 overflow-hidden">
-          <!-- CALENDAR VIEW -->
-          <div id="calendar-view" class="view active flex-1 h-full flex flex-col">
-            <div class="flex-1 flex overflow-hidden p-4 gap-4" style="height:calc(100% - 0px)">
-              <section class="flex-1 bg-white rounded-xl shadow-sm border border-[#c2c6d2]/30 overflow-hidden flex flex-col">
-                <div class="flex items-center justify-between px-6 py-3 border-b border-[#c2c6d2]/20">
-                  <div class="flex items-center gap-3">
-                    <button id="prev-month" class="p-2 hover:bg-[#f5f3f4] rounded-full transition-colors bg-transparent border-none cursor-pointer"><span class="material-symbols-outlined">chevron_left</span></button>
-                    <h3 id="month-title" class="text-lg font-bold text-[#1b1c1d] min-w-[200px] text-center"></h3>
-                    <button id="next-month" class="p-2 hover:bg-[#f5f3f4] rounded-full transition-colors bg-transparent border-none cursor-pointer"><span class="material-symbols-outlined">chevron_right</span></button>
-                  </div>
-                  <button id="today-btn" class="text-sm px-3 py-1.5 bg-[#f5f3f4] rounded-lg hover:bg-[#e9e8e9] transition-colors font-medium border-none cursor-pointer">Hoje</button>
-                </div>
-                <div class="grid grid-cols-7 border-b border-[#c2c6d2]/20 bg-[#faf9fa]">
-                  ${['Dom','Seg','Ter','Qua','Qui','Sex','Sab'].map(d => `<div class="py-2 text-center text-xs font-semibold text-[#727782] uppercase tracking-wider">${d}</div>`).join('')}
-                </div>
-                <div id="calendar-grid" class="flex-1 calendar-grid overflow-y-auto"></div>
-              </section>
-              <aside id="today-agenda" class="w-[300px] flex-shrink-0 bg-white rounded-xl shadow-sm border border-[#c2c6d2]/30 flex flex-col sidebar-paper overflow-hidden hidden lg:flex">
-                <div class="p-4 border-b border-[#c2c6d2]/20 bg-white/80">
-                  <h3 class="font-semibold text-[#1b1c1d]">Agenda de Hoje</h3>
-                  <p id="today-date" class="text-sm text-[#424751]"></p>
-                </div>
-                <div id="today-events" class="flex-1 p-4 space-y-3 overflow-y-auto"></div>
-              </aside>
-            </div>
-          </div>
-          <!-- EVENT VIEW -->
-          <div id="event-view" class="view flex-1 h-full p-6 overflow-y-auto">
-            <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-sm border border-[#c2c6d2]/30 p-6">
-              <h2 class="text-2xl font-bold text-[#1b1c1d] mb-6" style="font-family:sans-serif">Novo Evento</h2>
-              <form id="event-form" class="space-y-5">
-                <div>
-                  <label class="text-sm font-medium text-[#424751] uppercase tracking-wider">Escreva o titulo</label>
-                  <div id="pad-title" class="mt-1"></div>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                  <div>
-                    <label class="text-sm font-medium text-[#424751] uppercase tracking-wider">Data</label>
-                    <div class="relative mt-1">
-                      <span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#b7006f]" style="font-size:20px">calendar_today</span>
-                      <input id="ev-date" type="date" class="w-full h-12 bg-[#f5f3f4] border border-[#c2c6d2] rounded-lg pl-10 pr-3 text-sm focus:ring-2 focus:ring-[#b7006f]">
-                    </div>
-                  </div>
-                  <div>
-                    <label class="text-sm font-medium text-[#424751] uppercase tracking-wider">Horario</label>
-                    <div class="relative mt-1">
-                      <span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#b7006f]" style="font-size:20px">schedule</span>
-                      <input id="ev-time" type="time" class="w-full h-12 bg-[#f5f3f4] border border-[#c2c6d2] rounded-lg pl-10 pr-3 text-sm focus:ring-2 focus:ring-[#b7006f]">
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <label class="text-sm font-medium text-[#424751] uppercase tracking-wider">Escreva o local</label>
-                  <div id="pad-location" class="mt-1"></div>
-                </div>
-                <div>
-                  <label class="text-sm font-medium text-[#424751] uppercase tracking-wider">Escreva observacoes</label>
-                  <div id="pad-desc" class="mt-1"></div>
-                </div>
-                <div class="flex items-center gap-4">
-                  <div class="flex-1">
-                    <label class="text-sm font-medium text-[#424751] uppercase tracking-wider">Lembrete</label>
-                    <select id="ev-reminder" class="w-full h-12 bg-[#f5f3f4] border border-[#c2c6d2] rounded-lg px-3 text-sm mt-1 focus:ring-2 focus:ring-[#b7006f]">
-                      <option value="Na hora">Na hora do evento</option>
-                      <option value="15 min">15 minutos antes</option>
-                      <option value="1 hora">1 hora antes</option>
-                      <option value="1 dia">1 dia antes</option>
-                    </select>
-                  </div>
-                  <div class="flex-1">
-                    <label class="text-sm font-medium text-[#424751] uppercase tracking-wider">Categoria</label>
-                    <div class="flex gap-3 mt-3">
-                      <button type="button" class="cat-btn w-10 h-10 rounded-full bg-[#b7006f] ring-2 ring-offset-2 ring-[#b7006f] flex items-center justify-center text-white border-none cursor-pointer" data-cat="default"><span class="material-symbols-outlined" style="font-size:18px">check</span></button>
-                      <button type="button" class="cat-btn w-10 h-10 rounded-full bg-[#0b6e00] border-none cursor-pointer hover:scale-110 transition-transform" data-cat="pessoal"></button>
-                      <button type="button" class="cat-btn w-10 h-10 rounded-full bg-[#ba1a1a] border-none cursor-pointer hover:scale-110 transition-transform" data-cat="trabalho"></button>
-                      <button type="button" class="cat-btn w-10 h-10 rounded-full bg-[#5a5f63] border-none cursor-pointer hover:scale-110 transition-transform" data-cat="saude"></button>
-                    </div>
-                  </div>
-                </div>
-                <div class="flex justify-end gap-3 pt-4 border-t border-[#c2c6d2]/20">
-                  <button type="button" id="ev-cancel" class="px-6 py-2.5 rounded-lg text-[#5a5f63] hover:bg-[#f5f3f4] transition-all font-medium bg-transparent border-none cursor-pointer">Cancelar</button>
-                  <button type="submit" class="px-8 py-2.5 bg-[#b7006f] text-white rounded-lg font-semibold hover:opacity-90 transition-all active:scale-[0.98] shadow-md flex items-center gap-2 border-none cursor-pointer">
-                    <span class="material-symbols-outlined" style="font-size:18px">save</span> Salvar Evento
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-          <!-- TASKS VIEW -->
-          <div id="tasks-view" class="view flex-1 h-full p-6 overflow-y-auto">
-            <div class="max-w-3xl mx-auto">
-              <div class="flex items-center justify-between mb-6">
-                <h2 class="text-2xl font-bold text-[#1b1c1d]" style="font-family:sans-serif">Tarefas</h2>
-                <button id="add-task-btn" class="px-5 py-2.5 bg-[#b7006f] text-white rounded-lg font-semibold hover:opacity-90 transition-all active:scale-[0.98] shadow-md flex items-center gap-2 border-none cursor-pointer">
-                  <span class="material-symbols-outlined" style="font-size:18px">edit_note</span> Escrever Tarefa
+        <div id="cal-grid" class="cal-grid" style="flex:1;overflow-y:auto;padding:4px 8px"></div>
+      </div>
+
+      <!-- DAY VIEW -->
+      <div id="day-view-wrap" style="flex:1;display:none;flex-direction:column;overflow:hidden">
+        <div style="display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid #f0f0f2;background:#fafafa">
+          <button id="back-to-cal" class="back-btn"><span class="material-symbols-outlined" style="font-size:20px">arrow_back</span> Voltar</button>
+          <span id="day-date" class="date-title" style="font-size:17px;font-weight:600"></span>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:8px 0" class="day-view">
+          ${['manha','tarde','noite'].map(p => `
+            <div class="period-section">
+              <div class="period-header ${p}">
+                <span class="period-title ${p}">${PERIOD_ICON[p]} ${PERIOD_LABEL[p]}</span>
+                <button id="add-btn-${p}" class="back-btn" style="font-size:13px;font-weight:600;color:${PERIOD_COLOR[p]}">
+                  <span class="material-symbols-outlined" style="font-size:18px">add</span> Escrever
                 </button>
               </div>
-              <div id="tasks-list" class="space-y-3"></div>
+              <div id="tasks-${p}"><div class="empty-state">Nenhuma tarefa</div></div>
             </div>
-          </div>
-          <!-- SETTINGS VIEW -->
-          <div id="settings-view" class="view flex-1 h-full p-6 overflow-y-auto">
-            <div class="max-w-xl mx-auto bg-white rounded-xl shadow-sm border border-[#c2c6d2]/30 p-8">
-              <h2 class="text-2xl font-bold text-[#1b1c1d] mb-6">Configuracoes</h2>
-              <div class="space-y-4">
-                <div class="p-4 bg-[#f5f3f4] rounded-lg">
-                  <p class="font-medium text-[#1b1c1d]">Modo Escrita Manual</p>
-                  <p class="text-sm text-[#727782]">Use sua Apple Pencil para escrever</p>
-                </div>
-                <div class="p-4 bg-[#f5f3f4] rounded-lg">
-                  <p class="font-medium text-[#1b1c1d]">Sobre</p>
-                  <p class="text-sm text-[#727782]">Minha Agenda v2.0 • Escrita Manual</p>
-                </div>
-              </div>
-            </div>
-          </div>
+          `).join('')}
         </div>
-      </main>
+      </div>
+
       <div id="toast"></div>
     </div>`
 
   // Navigation
-  $('nav-dashboard').onclick = () => { showView('calendar-view'); $('view-title').textContent = 'Dashboard' }
-  $('nav-tasks').onclick = () => { showView('tasks-view'); $('view-title').textContent = 'Tarefas'; loadTasks() }
-  $('nav-settings').onclick = () => { showView('settings-view'); $('view-title').textContent = 'Config' }
-  $('nav-event').onclick = () => { showView('event-view'); $('view-title').textContent = 'Novo Evento'; setupEventForm() }
-  $('ev-cancel').onclick = () => { showView('calendar-view'); $('view-title').textContent = 'Dashboard' }
+  $('prev-month').onclick = () => { curMonth--; if(curMonth<0){curMonth=11;curYear--} renderCalendar() }
+  $('next-month').onclick = () => { curMonth++; if(curMonth>11){curMonth=0;curYear++} renderCalendar() }
+  $('today-btn').onclick = () => { const d=new Date(); curMonth=d.getMonth(); curYear=d.getFullYear(); renderCalendar() }
+  $('back-to-cal').onclick = backToCalendar
 
-  $('prev-month').onclick = () => { currentMonth--; if (currentMonth < 0) { currentMonth = 11; currentYear-- } renderCalendar() }
-  $('next-month').onclick = () => { currentMonth++; if (currentMonth > 11) { currentMonth = 0; currentYear++ } renderCalendar() }
-  $('today-btn').onclick = () => { const d = new Date(); currentMonth = d.getMonth(); currentYear = d.getFullYear(); renderCalendar() }
+  for (const p of ['manha','tarde','noite']) setupAddTask(p)
 
-  loadEvents().then(() => { renderCalendar(); initPads(); setupEventForm(); setupTasks() })
+  loadAll().then(() => renderCalendar())
 }
 
-// ===================== HANDWRITING PADS =====================
-let pads = {}
-
-function initPads() {
-  pads.title = new HandwritingPad($('pad-title'), { height: 80, clearable: true })
-  pads.location = new HandwritingPad($('pad-location'), { height: 60, clearable: true })
-  pads.desc = new HandwritingPad($('pad-desc'), { height: 140, clearable: true })
-}
-
-// ===================== EVENTS =====================
-async function loadEvents() {
+async function loadAll() {
   if (!userId) return
-  const { data, error } = await supabase.from('events').select('*').eq('user_id', userId).order('start_date')
-  if (!error && data) events = data
+  const { data, error } = await supabase.from('tasks').select('*').eq('user_id', userId).order('task_date')
+  if (!error && data) allTasks = data; else allTasks = []
 }
 
-function renderCalendar() {
-  const grid = $('calendar-grid')
-  if (!grid) return
-  const monthNames = ['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
-  $('month-title').textContent = `${monthNames[currentMonth]} ${currentYear}`
-
-  const firstDay = new Date(currentYear, currentMonth, 1).getDay()
-  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate()
-  const daysInPrevMonth = new Date(currentYear, currentMonth, 0).getDate()
-  const today = new Date()
-  let html = ''
-
-  const prevStart = daysInPrevMonth - firstDay + 1
-  for (let d = prevStart; d <= daysInPrevMonth; d++) html += `<div class="calendar-day other-month"><span class="text-xs font-medium">${d}</span></div>`
-
-  for (let d = 1; d <= daysInMonth; d++) {
-    const isToday = d === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear()
-    const dateStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`
-    const dayEvents = events.filter(e => e.start_date === dateStr)
-    let evHtml = ''
-    dayEvents.slice(0, 3).forEach(e => {
-      if (e.drawing) {
-        evHtml += `<img src="${e.drawing}" style="max-height:18px;width:auto;display:block;margin-bottom:1px;border-radius:1px">`
-      } else {
-        const colorMap = { default: '#b7006f', pessoal: '#0b6e00', trabalho: '#ba1a1a', saude: '#5a5f63' }
-        const bgMap = { default: '#fdf2f8', pessoal: '#f0fdf4', trabalho: '#fef2f2', saude: '#f5f3f4' }
-        const c = colorMap[e.category] || '#b7006f'
-        const b = bgMap[e.category] || '#fdf2f8'
-        evHtml += `<div style="font-family:sans-serif;font-size:11px;padding:0 4px;margin-bottom:1px;border-radius:2px;color:${c};background:${b};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.title}</div>`
-      }
-    })
-    if (dayEvents.length > 3) evHtml += `<div style="font-size:11px;color:#727782">+${dayEvents.length - 3} mais</div>`
-    html += `<div class="calendar-day ${isToday ? 'today' : ''}" data-date="${dateStr}"><span class="text-xs font-bold ${isToday ? 'text-[#b7006f]' : ''}">${d}</span>${evHtml}</div>`
-  }
-
-  const totalCells = firstDay + daysInMonth
-  const remaining = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7)
-  for (let i = 1; i <= remaining; i++) html += `<div class="calendar-day other-month"><span class="text-xs font-medium">${i}</span></div>`
-
-  grid.innerHTML = html
-  renderTodayAgenda()
-}
-
-function renderTodayAgenda() {
-  const container = $('today-events')
-  if (!container) return
-  const today = new Date()
-  const dateStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`
-  const weekdays = ['Domingo','Segunda-feira','Terca-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sabado']
-  if ($('today-date')) $('today-date').textContent = `${weekdays[today.getDay()]}, ${today.getDate()}/${today.getMonth()+1}`
-
-  const dayEvents = events.filter(e => e.start_date === dateStr)
-  if (dayEvents.length === 0) { container.innerHTML = '<p style="font-size:14px;color:#727782">Nenhum evento hoje ✨</p>'; return }
-
-  container.innerHTML = dayEvents.map(e => `
-    <div class="flex gap-3 group">
-      <div class="flex flex-col items-center">
-        <span style="font-size:13px;font-weight:bold;font-family:sans-serif">${e.start_time ? e.start_time.slice(0,5) : '--:--'}</span>
-        <div class="w-px flex-1 border-l border-dashed border-[#c2c6d2]/60 my-1"></div>
-      </div>
-      <div class="flex-1 p-1 -mt-1">
-        ${e.drawing ? `<img src="${e.drawing}" style="max-height:60px;width:auto;border-radius:4px;display:block">` : `<p style="font-weight:600;font-size:14px">${e.title}</p>`}
-        ${e.location ? `<img src="${e.location}" style="max-height:28px;width:auto;border-radius:2px;margin-top:2px;display:block" class="opacity-70">` : ''}
-        <div class="scribble-border w-full opacity-20 mt-1"></div>
-        <button class="del-event text-[#ba1a1a] text-xs mt-1 opacity-0 group-hover:opacity-100 transition-opacity bg-transparent border-none cursor-pointer" data-id="${e.id}">excluir</button>
-      </div>
-    </div>`).join('')
-
-  container.querySelectorAll('.del-event').forEach(btn => {
-    btn.onclick = async () => {
-      if (!confirm('Excluir este evento?')) return
-      await supabase.from('events').delete().eq('id', btn.dataset.id)
-      toast('Evento excluido')
-      loadEvents().then(() => renderCalendar())
-    }
-  })
-}
-
-function setupEventForm() {
-  if (!$('event-form')) return
-  const today = new Date()
-  if ($('ev-date')) $('ev-date').value = today.toISOString().split('T')[0]
-  if ($('ev-time')) $('ev-time').value = '09:00'
-
-  let selectedCat = 'default'
-  document.querySelectorAll('.cat-btn').forEach(btn => {
-    btn.onclick = () => {
-      document.querySelectorAll('.cat-btn').forEach(b => { b.classList.remove('ring-2', 'ring-offset-2'); b.innerHTML = '' })
-      btn.classList.add('ring-2', 'ring-offset-2')
-      const colors = { default: 'ring-[#b7006f]', pessoal: 'ring-[#0b6e00]', trabalho: 'ring-[#ba1a1a]', saude: 'ring-[#5a5f63]' }
-      btn.classList.add(colors[btn.dataset.cat] || 'ring-[#b7006f]')
-      btn.innerHTML = '<span class="material-symbols-outlined text-white" style="font-size:18px">check</span>'
-      selectedCat = btn.dataset.cat
-    }
-  })
-
-  $('event-form').onsubmit = async (e) => {
-    e.preventDefault()
-    const titlePad = pads.title
-    if (!titlePad || titlePad.isEmpty()) { toast('Escreva o titulo do evento com sua caneta'); return }
-    const submitBtn = e.target.querySelector('button[type="submit"]')
-    submitBtn.disabled = true; submitBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px">sync</span> Salvando...'
-    const { error } = await supabase.from('events').insert({
-      user_id: userId,
-      title: 'evento-manual',
-      drawing: titlePad.toDataURL(),
-      location: pads.location ? pads.location.toDataURL() : '',
-      description: pads.desc ? pads.desc.toDataURL() : '',
-      start_date: $('ev-date').value,
-      start_time: $('ev-time').value || null,
-      category: selectedCat,
-      reminder: $('ev-reminder').value
-    })
-    submitBtn.disabled = false; submitBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px">save</span> Salvar Evento'
-    if (error) { toast('Erro: ' + error.message); return }
-    toast('Evento criado!')
-    titlePad.clear(); if (pads.location) pads.location.clear(); if (pads.desc) pads.desc.clear()
-    await loadEvents(); renderCalendar()
-    showView('calendar-view'); $('view-title').textContent = 'Dashboard'
-  }
-}
-
-// ===================== TASKS =====================
-async function loadTasks() {
-  if (!$('tasks-list') || !userId) return
-  const { data, error } = await supabase.from('tasks').select('*').eq('user_id', userId).order('created_at', { ascending: false })
-  if (error || !data) return
-  tasks = data
-  renderTasks()
-}
-
-function renderTasks() {
-  const container = $('tasks-list')
-  if (!container) return
-  if (tasks.length === 0) { container.innerHTML = '<p class="text-[#727782] text-center py-8" style="font-size:1.25rem">Nenhuma tarefa ainda ✨</p>'; return }
-  container.innerHTML = tasks.map(t => {
-    const pc = { normal: 'bg-[#dfe3e8] text-[#424751]', alta: 'bg-[#ffdad6] text-[#ba1a1a]', urgente: 'bg-[#ba1a1a] text-white' }
-    const priorityColor = pc[t.priority] || pc.normal
-    return `
-    <div class="paper-card p-4 rounded-lg flex items-center justify-between group ${t.completed ? 'opacity-60' : ''}">
-      <div class="flex items-center gap-4 flex-1 min-w-0">
-        <div class="hand-drawn-checkbox ${t.completed ? 'checked' : ''} flex-shrink-0" data-id="${t.id}"></div>
-        <div class="min-w-0 flex-1">
-          ${t.drawing ? `<img src="${t.drawing}" style="max-height:48px;width:auto;border-radius:4px;display:block" class="${t.completed ? 'opacity-50' : ''}">` : `<h4 class="text-lg font-semibold ${t.completed ? 'line-through text-[#94a3b8]' : 'text-[#1b1c1d]'}">${t.title}</h4>`}
-          ${t.due_date ? `<p style="font-size:13px;color:#727782;margin-top:2px">${t.due_date}</p>` : ''}
-        </div>
-      </div>
-      <div class="flex items-center gap-3 flex-shrink-0 ml-2">
-        ${t.priority !== 'normal' ? `<span class="text-xs px-2 py-0.5 rounded-lg font-medium ${priorityColor}">${t.priority}</span>` : ''}
-        <button class="del-task text-[#ba1a1a] opacity-0 group-hover:opacity-100 transition-opacity bg-transparent border-none cursor-pointer" data-id="${t.id}"><span class="material-symbols-outlined" style="font-size:18px">delete</span></button>
-      </div>
-    </div>`
-  }).join('')
-
-  container.querySelectorAll('.hand-drawn-checkbox').forEach(cb => {
-    cb.onclick = async () => {
-      const task = tasks.find(t => t.id === cb.dataset.id)
-      if (!task) return
-      await supabase.from('tasks').update({ completed: !task.completed }).eq('id', cb.dataset.id)
-      loadTasks()
-    }
-  })
-  container.querySelectorAll('.del-task').forEach(btn => {
-    btn.onclick = async () => {
-      if (!confirm('Excluir tarefa?')) return
-      await supabase.from('tasks').delete().eq('id', btn.dataset.id)
-      toast('Tarefa excluida')
-      loadTasks()
-    }
-  })
-}
-
-function setupTasks() {
-  if (!$('add-task-btn')) return
-  $('add-task-btn').onclick = () => {
-    const container = $('tasks-list')
-    const form = document.createElement('div')
-    form.className = 'bg-white rounded-xl shadow-sm border border-[#b7006f]/40 p-4 fade-in'
-    const today = new Date().toISOString().split('T')[0]
-    form.innerHTML = `
-      <div class="mb-3">
-        <div id="pad-task" style="height:60px"></div>
-      </div>
-      <div class="flex items-center gap-3 mb-3">
-        <input id="new-task-date" type="date" value="${today}" class="flex-1 h-10 bg-[#f5f3f4] border border-[#c2c6d2] rounded-lg px-3 text-sm focus:ring-2 focus:ring-[#b7006f]">
-        <select id="new-task-priority" class="h-10 bg-[#f5f3f4] border border-[#c2c6d2] rounded-lg px-3 text-sm focus:ring-2 focus:ring-[#b7006f]">
-          <option value="normal">Normal</option>
-          <option value="alta">Alta</option>
-          <option value="urgente">Urgente</option>
-        </select>
-      </div>
-      <div class="flex justify-end gap-2">
-        <button id="new-task-cancel" class="px-4 py-1.5 text-sm rounded-lg text-[#727782] hover:bg-[#f5f3f4] bg-transparent border-none cursor-pointer">Cancelar</button>
-        <button id="new-task-save" class="px-6 py-1.5 text-sm bg-[#b7006f] text-white rounded-lg font-semibold hover:opacity-90 border-none cursor-pointer">Salvar</button>
-      </div>`
-    container.prepend(form)
-
-    const taskPad = new HandwritingPad($('pad-task'), { height: 60, clearable: true })
-
-    const cancel = $('new-task-cancel'); if (cancel) cancel.onclick = () => form.remove()
-    const save = $('new-task-save')
-    if (save) save.onclick = async () => {
-      if (taskPad.isEmpty()) { toast('Escreva a tarefa com sua caneta'); return }
-      const { error } = await supabase.from('tasks').insert({
-        user_id: userId,
-        title: 'tarefa-manual',
-        drawing: taskPad.toDataURL(),
-        due_date: ($('new-task-date') || {}).value || null,
-        priority: ($('new-task-priority') || {}).value || 'normal'
-      })
-      if (error) { toast('Erro: ' + error.message); return }
-      toast('Tarefa criada!')
-      form.remove(); loadTasks()
-    }
-  }
-}
-
-// ===================== INIT =====================
+// =============== INIT ===============
 async function init() {
   try {
     const { data: { session } } = await supabase.auth.getSession()
-    if (session?.user) {
-      userId = session.user.id
-      renderApp()
-    } else {
+    if (session?.user) { userId = session.user.id; renderApp() }
+    else {
       const { data, error } = await supabase.auth.signInAnonymously()
-      if (error) throw error
-      userId = data.user.id
-      renderApp()
+      if (error) throw error; userId = data.user.id; renderApp()
     }
   } catch(e) {
-    $('app').innerHTML = '<div style="text-align:center;padding:40px;color:#ba1a1a"><h2>Erro ao conectar</h2><p>' + e.message + '</p><button onclick="location.reload()" style="margin-top:16px;padding:12px 24px;background:#b7006f;color:white;border:none;border-radius:8px;cursor:pointer">Tentar novamente</button></div>'
+    $('app').innerHTML = `<div style="text-align:center;padding:40px;color:#ba1a1a"><h2>Erro</h2><p>${e.message}</p><button onclick="location.reload()" style="margin-top:16px;padding:12px 24px;background:#b7006f;color:#fff;border:none;border-radius:8px;cursor:pointer">Tentar</button></div>`
   }
 }
 
 supabase.auth.onAuthStateChange((event, session) => {
-  if (event === 'SIGNED_IN' && session?.user && !userId) {
-    userId = session.user.id
-    renderApp()
-  }
+  if (event==='SIGNED_IN' && session?.user && !userId) { userId = session.user.id; renderApp() }
 })
 
 init()
