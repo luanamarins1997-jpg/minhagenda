@@ -276,7 +276,7 @@ async function loadDayTasks(date) {
       container.innerHTML = lista.map(t => `
         <div class="task-row ${t.status}" data-id="${t.id}">
           <div class="status-circle ${t.status}" data-id="${t.id}">${STATUS_ICON[t.status]}</div>
-          ${t.drawing ? `<img class="task-img" src="${t.drawing}" draggable="false">` : '<span style="font-size:13px;color:#999">(sem escrita)</span>'}
+          ${t.drawing ? `<img class="task-img" src="${t.drawing}" draggable="false">` : `<span style="font-size:14px;color:#333">${t.title || '(sem tarefa)'}</span>`}
         </div>
       `).join('')
     }
@@ -306,25 +306,54 @@ function setupAddTask(period) {
     const wrap = document.createElement('div')
     wrap.id = 'inline-pad'
     wrap.className = 'add-area'
-    wrap.innerHTML = `
-      <div class="add-pad-wrap"><div id="pad-inline"></div></div>
-      <div class="add-actions">
-        <button id="inline-cancel" class="back-btn">Cancelar</button>
-        <button id="inline-save" style="padding:6px 16px;background:#b7006f;color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:13px">Salvar</button>
-      </div>`
+
+    const padWrap = document.createElement('div')
+    padWrap.className = 'add-pad-wrap'
+    const padDiv = document.createElement('div')
+    padDiv.id = 'pad-inline'
+    padWrap.appendChild(padDiv)
+    wrap.appendChild(padWrap)
+
+    const actions = document.createElement('div')
+    actions.className = 'add-actions'
+
+    const cancelBtn = document.createElement('button')
+    cancelBtn.id = 'inline-cancel'
+    cancelBtn.className = 'back-btn'
+    cancelBtn.textContent = 'Cancelar'
+    actions.appendChild(cancelBtn)
+
+    const saveBtn = document.createElement('button')
+    saveBtn.id = 'inline-save'
+    saveBtn.textContent = 'Salvar'
+    saveBtn.style.cssText = 'padding:6px 16px;background:#b7006f;color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:13px'
+    actions.appendChild(saveBtn)
+    wrap.appendChild(actions)
 
     if (container.querySelector('.empty-state')) container.innerHTML = ''
     container.appendChild(wrap)
 
-    const pad = new HandwritingPad($('pad-inline'), { h: 80, clearable: true })
-    setTimeout(() => pad.ca.focus(), 100)
+    const pad = new HandwritingPad(padDiv, { h: 80, clearable: true })
 
-    $('inline-cancel').onclick = () => wrap.remove()
-    $('inline-save').onclick = async () => {
-      if (pad.isEmpty()) { toast('Escreva a tarefa com sua caneta'); return }
+    cancelBtn.onclick = () => wrap.remove()
+    saveBtn.onclick = async () => {
+      const drawing = pad.toDataURL()
+      if (!drawing) {
+        const fallback = prompt('Escreva com a caneta ou digite aqui:')
+        if (!fallback || !fallback.trim()) { toast('Tarefa em branco'); return }
+        const { error } = await supabase.from('tasks').insert({
+          user_id: userId, task_date: selectedDate,
+          period, title: fallback.trim(), status: 'pending'
+        })
+        if (error) { toast('Erro: '+error.message); return }
+        toast('Tarefa adicionada!')
+        wrap.remove()
+        await loadDayTasks(selectedDate)
+        return
+      }
       const { error } = await supabase.from('tasks').insert({
         user_id: userId, task_date: selectedDate,
-        period, drawing: pad.toDataURL(), status: 'pending'
+        period, drawing, status: 'pending'
       })
       if (error) { toast('Erro: '+error.message); return }
       toast('Tarefa adicionada!')

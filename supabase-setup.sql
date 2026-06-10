@@ -11,6 +11,7 @@ CREATE TABLE tasks (
   task_date DATE NOT NULL,
   period TEXT NOT NULL CHECK (period IN ('manha', 'tarde', 'noite')),
   drawing TEXT DEFAULT '',
+  title TEXT DEFAULT '',
   status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'done', 'failed')),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
