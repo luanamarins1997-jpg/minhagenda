@@ -241,6 +241,46 @@ function renderCalendar() {
   })
 }
 
+// =============== TODAY TASKS (Main Screen) ===============
+function renderTodayTasks() {
+  const container = $('today-tasks')
+  if (!container) return
+  const hoje = new Date()
+  const ds = dateStr(hoje)
+  const tarefas = allTasks.filter(t => t.task_date === ds)
+
+  if (tarefas.length === 0) {
+    container.innerHTML = `<div class="empty-state">Nenhuma tarefa hoje ✨</div>`
+    return
+  }
+
+  container.innerHTML = ['manha','tarde','noite'].map(p => {
+    const lista = tarefas.filter(t => t.period === p)
+    if (lista.length === 0) return ''
+    return `
+      <div style="margin-bottom:8px">
+        <div style="font-size:12px;font-weight:700;color:${PERIOD_COLOR[p]};margin-bottom:4px;padding:0 4px">${PERIOD_ICON[p]} ${PERIOD_LABEL[p]}</div>
+        ${lista.map(t => `
+          <div class="task-row ${t.status}" style="cursor:default;padding:4px 8px;min-height:40px;border-radius:4px" data-id="${t.id}">
+            <div class="status-circle ${t.status}" style="width:24px;height:24px;font-size:13px" data-id="${t.id}">${STATUS_ICON[t.status]}</div>
+            ${t.drawing ? `<img class="task-img" src="${t.drawing}" style="max-height:28px">` : `<span style="font-size:13px;color:#333">${t.title || ''}</span>`}
+          </div>
+        `).join('')}
+      </div>`
+  }).join('')
+
+  container.querySelectorAll('.status-circle').forEach(el => {
+    el.addEventListener('click', async (e) => {
+      e.stopPropagation()
+      const task = allTasks.find(t => t.id === el.dataset.id)
+      if (!task) return
+      const next = STATUS_NEXT[task.status]
+      const { error } = await supabase.from('tasks').update({ status: next }).eq('id', el.dataset.id)
+      if (!error) { await loadAll(); renderCalendar(); renderTodayTasks() }
+    })
+  })
+}
+
 // =============== DAY VIEW ===============
 async function showDayView(date) {
   selectedDate = date
@@ -254,7 +294,7 @@ function backToCalendar() {
   $('day-view-wrap').style.display = 'none'
   $('calendar-view').style.display = 'flex'
   $('view-title').textContent = 'Agenda'
-  renderCalendar()
+  loadAll().then(() => { renderCalendar(); renderTodayTasks() })
 }
 
 async function loadDayTasks(date) {
@@ -385,7 +425,14 @@ function renderApp() {
         <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:4px 8px;background:#fafafa;border-bottom:1px solid #f0f0f2">
           ${['Dom','Seg','Ter','Qua','Qui','Sex','Sab'].map(d => `<div style="text-align:center;font-size:11px;font-weight:600;color:#999;padding:4px 0">${d}</div>`).join('')}
         </div>
-        <div id="cal-grid" class="cal-grid" style="flex:1;overflow-y:auto;padding:4px 8px"></div>
+        <div id="cal-grid" class="cal-grid" style="flex-shrink:0;padding:4px 8px"></div>
+        <!-- Today's tasks on main screen -->
+        <div style="padding:8px 16px 4px;border-top:1px solid #f0f0f2;background:#fafafa">
+          <span style="font-size:14px;font-weight:700;color:#b7006f" id="today-section-title">Tarefas de Hoje</span>
+        </div>
+        <div id="today-tasks" style="flex:1;overflow-y:auto;padding:4px 8px 16px">
+          <div class="empty-state">Carregando...</div>
+        </div>
       </div>
 
       <!-- DAY VIEW -->
@@ -420,7 +467,7 @@ function renderApp() {
 
   for (const p of ['manha','tarde','noite']) setupAddTask(p)
 
-  loadAll().then(() => renderCalendar())
+  loadAll().then(() => { renderCalendar(); renderTodayTasks() })
 }
 
 async function loadAll() {
