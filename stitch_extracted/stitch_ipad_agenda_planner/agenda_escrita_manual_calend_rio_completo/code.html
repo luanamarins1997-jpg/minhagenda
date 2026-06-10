@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&amp;family=Gochi+Hand&amp;family=Patrick+Hand&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {"surface-tint": "#b7006f", "on-primary-fixed-variant": "#8c0054", "secondary-container": "#dfe3e8", "on-background": "#1b1c1d", "primary-fixed-dim": "#ffb0ce", "on-surface-variant": "#424751", "on-error": "#ffffff", "on-tertiary-fixed": "#012200", error: "#ba1a1a", "surface-bright": "#faf9fa", "tertiary-container": "#278917", "on-tertiary": "#ffffff", "outline-variant": "#c2c6d2", "on-primary": "#ffffff", "on-secondary-fixed-variant": "#42474b", background: "#faf9fa", "inverse-primary": "#ffb0ce", "surface-container-high": "#e9e8e9", "on-primary-container": "#120007", "on-error-container": "#93000a", "on-secondary-fixed": "#171c20", "inverse-on-surface": "#f2f0f1", outline: "#727782", "on-secondary-container": "#606569", "surface-container-low": "#f5f3f4", surface: "#faf9fa", "inverse-surface": "#303031", "error-container": "#ffdad6", "secondary-fixed": "#dfe3e8", "surface-dim": "#dbdadb", "surface-variant": "#e3e2e3", secondary: "#5a5f63", tertiary: "#0b6e00", "on-surface": "#1b1c1d", "tertiary-fixed": "#95fa7c", "primary-container": "#e3078b", "surface-container-highest": "#e3e2e3", "surface-container": "#efedee", "on-tertiary-fixed-variant": "#065300", "on-primary-fixed": "#3e0022", "on-secondary": "#ffffff", "on-tertiary-container": "#000700", "surface-container-lowest": "#ffffff", "primary-fixed": "#ffd9e5", primary: "#b7006f", "secondary-fixed-dim": "#c2c7cc", "tertiary-fixed-dim": "#7add63"}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}, spacing: {unit: "8px", stack_gap: "12px", sidebar_width: "280px", gutter: "24px", margin_tablet: "32px", card_padding: "16px"}, fontFamily: {"title-md": ["Inter"], "body-md": ["Inter"], "label-sm": ["Inter"], "headline-md": ["Inter"], "display-date": ["Inter"], "title-lg": ["Inter"], "headline-lg": ["Inter"], "body-lg": ["Inter"], "label-caps": ["Inter"], handwriting: ["'Patrick Hand'", "cursive"], "handwriting-alt": ["'Gochi Hand'", "cursive"], headline: ["Inter"], display: ["Inter"], body: ["Inter"], label: ["Inter"]}, fontSize: {"title-md": ["16px", {lineHeight: "24px", fontWeight: "600"}], "body-md": ["14px", {lineHeight: "20px", fontWeight: "400"}], "label-sm": ["12px", {lineHeight: "16px", fontWeight: "500"}], "headline-md": ["24px", {lineHeight: "32px", fontWeight: "600"}], "display-date": ["48px", {lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700"}], "title-lg": ["20px", {lineHeight: "28px", fontWeight: "600"}], "headline-lg": ["32px", {lineHeight: "40px", letterSpacing: "-0.01em", fontWeight: "600"}], "body-lg": ["16px", {lineHeight: "24px", fontWeight: "400"}], "label-caps": ["12px", {lineHeight: "16px", letterSpacing: "0.05em", fontWeight: "700"}]}}}};</script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .breathe-container { padding: 32px; }
+        .calendar-grid { 
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background-color: #E2E8F0;
+        }
+        .calendar-day {
+            background-color: white;
+            min-height: 120px;
+            padding: 8px;
+            transition: background-color 0.2s;
+            background-image: linear-gradient(#f1f5f9 1px, transparent 1px);
+            background-size: 100% 24px;
+        }
+        .calendar-day:hover { background-color: #F8FAFC; }
+        .event-chip-handwritten {
+            font-family: 'Patrick Hand', cursive;
+            padding: 0px 4px;
+            margin-bottom: 2px;
+            font-size: 14px;
+            line-height: 1.2;
+            transform: rotate(-1deg);
+        }
+        .sidebar-paper {
+            background-image: 
+                linear-gradient(90deg, transparent 39px, #abced4 39px, #abced4 41px, transparent 41px),
+                linear-gradient(#e1e1e1 0.1em, transparent 0.1em);
+            background-size: 100% 1.5rem;
+            background-color: #ffffff;
+        }
+        .handwritten-text {
+            font-family: 'Patrick Hand', cursive;
+        }
+        .handwritten-title {
+            font-family: 'Gochi Hand', cursive;
+        }
+        .scribble-border {
+            border-bottom: 2px solid #333;
+            border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface overflow-hidden">
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-0 h-full w-[280px] bg-surface-container-low backdrop-blur-xl flex flex-col p-unit gap-stack_gap border-r border-outline-variant/30 z-50">
+<div class="px-4 py-6">
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed-dim">Agenda</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant opacity-70">Elevated Planner</p>
+</div>
+<button class="mx-4 mb-4 flex items-center justify-center gap-2 bg-primary text-on-primary py-3 rounded-xl font-title-md text-title-md shadow-lg hover:opacity-90 active:scale-95 transition-all">
+<span class="material-symbols-outlined">add</span>
+        Create New
+    </button>
+<nav class="flex flex-col gap-1 px-2">
+<a class="flex items-center gap-3 px-4 py-3 bg-secondary-container text-on-secondary-container rounded-lg transition-all font-title-md text-title-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">calendar_today</span>
+            Dashboard
+        </a>
+<a class="flex items-center gap-3 px-4 py-3 text-secondary hover:bg-surface-container-high rounded-lg transition-all font-title-md text-title-md" href="#">
+<span class="material-symbols-outlined">task_alt</span>
+            Tasks
+        </a>
+<a class="flex items-center gap-3 px-4 py-3 text-secondary hover:bg-surface-container-high rounded-lg transition-all font-title-md text-title-md" href="#">
+<span class="material-symbols-outlined">settings</span>
+            Settings
+        </a>
+</nav>
+<div class="mt-auto p-4 flex items-center gap-3">
+<img alt="User profile avatar" class="w-10 h-10 rounded-full bg-surface-container-highest" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCfECH71qDmlQgfJIS7H0mXznJ19VpDf457xGnecq_4CW7GhCxjiKfYL_MuUw53DzKPceADfWw-ypq_tX-ujmMhiIsfkok-AuAqtjEz7rgnODEQ9gjTjZgHUbtPOv8B8XNsJUSdvV-0DgswE-s4nA161ZFCw2rBUW8MQc2deNAqYfc93nNo9e0vyRI1zO5ZxWIy86mtzK7_5WTmb7NAgRqpyDBO8-ERQLH5uQmDbOFKyTeiig8yfb8Wr3fJByP21rBlbLwbTvt8jp_F"/>
+<div>
+<p class="font-title-md text-title-md text-on-surface">Alex Rivera</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Pro Plan</p>
+</div>
+</div>
+</aside>
+<!-- Main Wrapper -->
+<main class="ml-[280px] h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="full-width h-20 sticky top-0 bg-surface/80 backdrop-blur-md flex justify-between items-center px-margin_tablet w-full z-40">
+<div class="flex items-center gap-4">
+<h2 class="font-headline-md text-headline-md font-bold text-on-surface">September 2023</h2>
+<div class="flex bg-surface-container-high p-1 rounded-lg">
+<button class="px-4 py-1.5 text-label-sm font-title-md bg-surface text-on-surface rounded-md shadow-sm">Month</button>
+<button class="px-4 py-1.5 text-label-sm font-title-md text-on-surface-variant hover:text-on-surface">Week</button>
+<button class="px-4 py-1.5 text-label-sm font-title-md text-on-surface-variant hover:text-on-surface">Day</button>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative hidden lg:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="bg-surface-container-low border-none rounded-full py-2 pl-10 pr-4 w-64 focus:ring-2 focus:ring-primary text-body-md" placeholder="Search events..." type="text"/>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="bg-primary text-on-primary px-6 py-2 rounded-lg font-title-md text-title-md hover:opacity-90 active:scale-95 transition-all">
+                    Add Event
+                </button>
+</div>
+</div>
+</header>
+<!-- Content Area -->
+<div class="flex-1 flex overflow-hidden breathe-container gap-gutter">
+<!-- Calendar Grid Pane -->
+<section class="flex-1 bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/30 overflow-hidden flex flex-col">
+<div class="grid grid-cols-7 border-b border-outline-variant/30 bg-surface">
+<div class="py-3 text-center font-label-caps text-label-caps text-on-surface-variant">SUN</div>
+<div class="py-3 text-center font-label-caps text-label-caps text-on-surface-variant">MON</div>
+<div class="py-3 text-center font-label-caps text-label-caps text-on-surface-variant">TUE</div>
+<div class="py-3 text-center font-label-caps text-label-caps text-on-surface-variant">WED</div>
+<div class="py-3 text-center font-label-caps text-label-caps text-on-surface-variant">THU</div>
+<div class="py-3 text-center font-label-caps text-label-caps text-on-surface-variant">FRI</div>
+<div class="py-3 text-center font-label-caps text-label-caps text-on-surface-variant">SAT</div>
+</div>
+<div class="flex-1 calendar-grid overflow-y-auto">
+<!-- Week 1 (Partial) -->
+<div class="calendar-day opacity-30 bg-surface-container-low">27</div>
+<div class="calendar-day opacity-30 bg-surface-container-low">28</div>
+<div class="calendar-day opacity-30 bg-surface-container-low">29</div>
+<div class="calendar-day opacity-30 bg-surface-container-low">30</div>
+<div class="calendar-day opacity-30 bg-surface-container-low">31</div>
+<div class="calendar-day">
+<span class="text-label-sm font-bold">1</span>
+<div class="event-chip-handwritten text-secondary-fixed-dim bg-secondary-container/20 rounded-sm">
+                        Q3 Review
+                    </div>
+</div>
+<div class="calendar-day"><span class="text-label-sm font-bold">2</span></div>
+<!-- Week 2 -->
+<div class="calendar-day"><span class="text-label-sm font-bold">3</span></div>
+<div class="calendar-day"><span class="text-label-sm font-bold">4</span></div>
+<div class="calendar-day"><span class="text-label-sm font-bold">5</span></div>
+<div class="calendar-day">
+<span class="text-label-sm font-bold">6</span>
+<div class="event-chip-handwritten text-primary bg-primary-container/10 rounded-sm">
+                        Team Sync
+                    </div>
+</div>
+<div class="calendar-day"><span class="text-label-sm font-bold">7</span></div>
+<div class="calendar-day"><span class="text-label-sm font-bold">8</span></div>
+<div class="calendar-day"><span class="text-label-sm font-bold">9</span></div>
+<!-- Week 3 (Current Week Example) -->
+<div class="calendar-day"><span class="text-label-sm font-bold">10</span></div>
+<div class="calendar-day"><span class="text-label-sm font-bold">11</span></div>
+<div class="calendar-day bg-primary/5">
+<span class="text-label-sm font-bold text-primary">12</span>
+<div class="event-chip-handwritten text-primary font-bold bg-primary-container/20 rounded-sm">
+                        Client Pitch
+                    </div>
+<div class="event-chip-handwritten text-tertiary-container bg-tertiary-fixed/20 rounded-sm">
+                        Gym
+                    </div>
+</div>
+<div class="calendar-day"><span class="text-label-sm font-bold">13</span></div>
+<div class="calendar-day"><span class="text-label-sm font-bold">14</span></div>
+<div class="calendar-day"><span class="text-label-sm font-bold">15</span></div>
+<div class="calendar-day"><span class="text-label-sm font-bold">16</span></div>
+<!-- Week 4 -->
+<div class="calendar-day"><span class="text-label-sm font-bold">17</span></div>
+<div class="calendar-day"><span class="text-label-sm font-bold">18</span></div>
+<div class="calendar-day"><span class="text-label-sm font-bold">19</span></div>
+<div class="calendar-day"><span class="text-label-sm font-bold">20</span></div>
+<div class="calendar-day"><span class="text-label-sm font-bold">21</span></div>
+<div class="calendar-day"><span class="text-label-sm font-bold">22</span></div>
+<div class="calendar-day"><span class="text-label-sm font-bold">23</span></div>
+<!-- Remaining days -->
+<div class="calendar-day"><span class="text-label-sm font-bold">24</span></div>
+<div class="calendar-day"><span class="text-label-sm font-bold">25</span></div>
+<div class="calendar-day"><span class="text-label-sm font-bold">26</span></div>
+<div class="calendar-day"><span class="text-label-sm font-bold">27</span></div>
+<div class="calendar-day"><span class="text-label-sm font-bold">28</span></div>
+<div class="calendar-day"><span class="text-label-sm font-bold">29</span></div>
+<div class="calendar-day"><span class="text-label-sm font-bold">30</span></div>
+</div>
+</section>
+<!-- Today's Agenda Pane -->
+<aside class="w-[340px] flex flex-col gap-gutter">
+<div class="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/30 flex flex-col h-full overflow-hidden sidebar-paper">
+<div class="p-card_padding border-b border-outline-variant/20 bg-white/80 backdrop-blur-sm">
+<div class="flex items-center justify-between">
+<div>
+<h3 class="font-title-lg text-title-lg text-on-surface">Today's Agenda</h3>
+<p class="font-label-sm text-label-sm text-on-surface-variant handwritten-text">Tuesday, Sep 12</p>
+</div>
+<button class="p-2 hover:bg-surface-container-high rounded-full transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+<div class="p-card_padding space-y-6 flex-1 overflow-y-auto">
+<!-- Agenda Item 1 -->
+<div class="flex gap-4 group cursor-pointer relative">
+<div class="flex flex-col items-center">
+<span class="handwritten-text text-lg font-bold text-on-surface">09:00</span>
+<div class="w-px h-full border-l border-dashed border-outline-variant/60 my-1 group-last:hidden"></div>
+</div>
+<div class="flex-1 p-3 -mt-1 transform -rotate-1">
+<p class="handwritten-title text-xl text-on-surface leading-tight">Morning Briefing</p>
+<p class="handwritten-text text-on-surface-variant text-base">Conference Room A</p>
+<div class="scribble-border w-full opacity-30 mt-1"></div>
+</div>
+</div>
+<!-- Agenda Item 2 -->
+<div class="flex gap-4 group cursor-pointer">
+<div class="flex flex-col items-center">
+<span class="handwritten-text text-lg font-bold text-on-surface">11:30</span>
+<div class="w-px h-full border-l border-dashed border-outline-variant/60 my-1 group-last:hidden"></div>
+</div>
+<div class="flex-1 p-3 -mt-1 transform rotate-1">
+<p class="handwritten-title text-xl text-on-surface leading-tight underline decoration-primary/30 underline-offset-4">Client Pitch: Zenith Inc</p>
+<div class="flex items-center gap-1 mt-1">
+<span class="handwritten-text text-sm text-primary font-bold">★ High Priority!</span>
+</div>
+</div>
+</div>
+<!-- Current Time Marker (Hand-drawn) -->
+<div class="relative py-4">
+<div class="absolute left-0 right-0 top-1/2 h-0.5 border-t border-error/40 border-dashed -translate-y-1/2"></div>
+<div class="absolute left-[34px] top-1/2 -translate-y-1/2 flex items-center gap-2">
+<div class="w-2.5 h-2.5 rounded-full bg-error ring-4 ring-error/20"></div>
+<span class="handwritten-text text-error font-bold bg-white px-1 text-sm">NOW</span>
+</div>
+</div>
+<!-- Agenda Item 3 -->
+<div class="flex gap-4 group cursor-pointer">
+<div class="flex flex-col items-center">
+<span class="handwritten-text text-lg font-bold text-on-surface opacity-60">14:00</span>
+<div class="w-px h-full border-l border-dashed border-outline-variant/60 my-1 group-last:hidden"></div>
+</div>
+<div class="flex-1 p-3 -mt-1 opacity-80">
+<p class="handwritten-title text-xl text-on-surface leading-tight">Marketing Sync</p>
+<p class="handwritten-text text-on-surface-variant text-base">Video Call</p>
+<div class="scribble-border w-full opacity-20 mt-1"></div>
+</div>
+</div>
+<!-- Agenda Item 4 -->
+<div class="flex gap-4 group cursor-pointer">
+<div class="flex flex-col items-center">
+<span class="handwritten-text text-lg font-bold text-on-surface">17:30</span>
+<div class="w-px h-full border-l border-dashed border-outline-variant/60 my-1 group-last:hidden"></div>
+</div>
+<div class="flex-1 p-3 -mt-1 transform -rotate-1">
+<p class="handwritten-title text-xl text-on-surface leading-tight">Gym Session</p>
+<p class="handwritten-text text-on-surface-variant text-base italic">Lower Body Focus</p>
+</div>
+</div>
+</div>
+<!-- Weather Visualizer -->
+<div class="mt-4 relative h-32 m-4 rounded-xl overflow-hidden group">
+<img alt="Dynamic weather forecast" class="w-full h-full object-cover brightness-75 group-hover:scale-105 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDLlWa0VeP7Xj3geH2fJmHwSB03zjmqUG6Yt_VbP-JyVPB3bYHJSxUEMBuHNso1ijvWBWeIzuDj_UT1qUgnYMj2VlNyPLDhq2SutF6znynScr5-pWNEnG5uyZSEwl03N4xEEG_1LXYiy7-In12qTuvOV2ULMB-57WZSjUNQGm33HQX9sl8k9uJFChyjc7DFpgL8eu7bskPVmHFgfoXNlad1JojJ6GDnC9_FlXCimDxaiKf7SON2FwV_B1ofq051DuBQFAy-zq6Z-ndv"/>
+<div class="absolute inset-0 bg-gradient-to-t from-on-background/80 to-transparent flex flex-col justify-end p-4">
+<div class="flex justify-between items-end text-white">
+<div>
+<p class="handwritten-title text-3xl leading-none">24°C</p>
+<p class="handwritten-text text-sm opacity-80">Partly Cloudy · London</p>
+</div>
+<span class="material-symbols-outlined text-4xl">partly_cloudy_day</span>
+</div>
+</div>
+</div>
+</div>
+</aside>
+</div>
+</main>
+<!-- FAB -->
+<button class="fixed bottom-margin_tablet right-margin_tablet w-14 h-14 bg-primary text-on-primary rounded-xl shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50">
+<span class="material-symbols-outlined text-3xl">add</span>
+</button>
+<script>
+    // Simple interaction for the calendar cells
+    document.querySelectorAll('.calendar-day').forEach(cell => {
+        cell.addEventListener('mousedown', () => {
+            cell.classList.add('scale-[0.98]');
+            setTimeout(() => cell.classList.remove('scale-[0.98]'), 150);
+        });
+    });
+
+    // Current time indicator animation
+    const updateTimeMarker = () => {
+        const now = new Date();
+        // In a real app, this would position the hand-drawn 'NOW' marker
+    };
+    setInterval(updateTimeMarker, 60000);
+</script>
+</body></html>
