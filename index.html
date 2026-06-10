@@ -245,14 +245,14 @@ function renderCalendar() {
 async function showDayView(date) {
   selectedDate = date
   $('view-title').textContent = 'Dia'
-  $('calendar-view').classList.remove('active')
-  $('day-view-wrap').classList.add('active')
-  await loadDayTasks(date)
+  $('calendar-view').style.display = 'none'
+  $('day-view-wrap').style.display = 'flex'
+  loadDayTasks(date)
 }
 
 function backToCalendar() {
-  $('day-view-wrap').classList.remove('active')
-  $('calendar-view').classList.add('active')
+  $('day-view-wrap').style.display = 'none'
+  $('calendar-view').style.display = 'flex'
   $('view-title').textContent = 'Agenda'
   renderCalendar()
 }
@@ -344,7 +344,7 @@ function renderApp() {
       </header>
 
       <!-- CALENDAR VIEW -->
-      <div id="calendar-view" class="active" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+      <div id="calendar-view" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
         <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#fafafa;border-bottom:1px solid #f0f0f2">
           <div style="display:flex;align-items:center;gap:8px">
             <button id="prev-month" class="back-btn" style="padding:4px 8px"><span class="material-symbols-outlined">chevron_left</span></button>
