@@ -1,165 +1,514 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html class="light" lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Agenda">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="theme-color" content="#007AFF">
-  <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="icons/icon-192.svg">
-  <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
-  <title>Agenda</title>
-  <link rel="stylesheet" href="css/style.css">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>Minha Agenda</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Gochi+Hand&family=Patrick+Hand&family=Caveat:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 </head>
 <body>
-  <div id="app">
-    <header id="app-header">
-      <div class="header-left">
-        <button id="btn-menu" class="btn-icon" aria-label="Menu">&#9776;</button>
-        <h1 id="header-title">Agenda</h1>
-      </div>
-      <div class="header-right">
-        <button id="btn-today" class="btn-text">Hoje</button>
-        <button id="btn-theme" class="btn-icon" aria-label="Alternar tema">&#9790;</button>
-      </div>
-    </header>
 
-    <section id="view-calendar">
-      <div class="month-nav">
-        <button id="btn-prev-month" class="btn-icon">&#9664;</button>
-        <h2 id="month-title">Junho 2026</h2>
-        <button id="btn-next-month" class="btn-icon">&#9654;</button>
-      </div>
-      <div class="calendar-grid" id="calendar-grid"></div>
-      <div class="day-section" id="day-section">
-        <div class="day-section-header">
-          <h3 id="day-label">Hoje</h3>
-          <button id="btn-new-event" class="btn-primary">+ Novo Evento</button>
+<div id="app" class="flex items-center justify-center" style="min-height:100vh;color:#727782">Carregando...</div>
+
+<style>
+  body { font-family: 'Inter', sans-serif; background-color: #faf9fa; margin: 0; }
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+  .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background-color: #E2E8F0; }
+  .calendar-day {
+    background-color: white; min-height: 100px; padding: 6px; cursor: pointer; overflow: hidden;
+    background-image: linear-gradient(#f1f5f9 1px, transparent 1px); background-size: 100% 24px;
+    transition: background-color 0.2s;
+  }
+  .calendar-day:hover { background-color: #F8FAFC; }
+  .calendar-day.today { background-color: #fdf2f8; }
+  .calendar-day.other-month { opacity: 0.35; background-color: #f1f5f9; }
+  .event-chip {
+    font-family: 'Patrick Hand', cursive; padding: 0px 4px; margin-bottom: 2px; font-size: 12px;
+    line-height: 1.3; transform: rotate(-0.5deg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-radius: 2px;
+  }
+  .sidebar-paper {
+    background-image: linear-gradient(90deg, transparent 39px, #abced4 39px, #abced4 41px, transparent 41px),
+      linear-gradient(#e1e1e1 0.1em, transparent 0.1em); background-size: 100% 1.5rem; background-color: #ffffff;
+  }
+  .handwritten-text { font-family: 'Patrick Hand', cursive; }
+  .handwritten-title { font-family: 'Gochi Hand', cursive; }
+  .scribble-border { border-bottom: 2px solid #333; border-radius: 255px 15px 225px 15px/15px 225px 15px 255px; }
+  .handwriting-zone { background-color: #fcfdff; background-image: linear-gradient(#e2e7ff 1px, transparent 1px); background-size: 100% 2rem; line-height: 2rem; }
+  .paper-card {
+    background-image: linear-gradient(#e1e5f0 1px, transparent 1px); background-size: 100% 2rem;
+    background-color: #fff; box-shadow: 2px 2px 5px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; transform: rotate(-0.5deg);
+  }
+  .paper-card:nth-child(even) { transform: rotate(0.5deg); background-color: #fdfdfd; }
+  .hand-drawn-checkbox {
+    border: 2px solid #64748B; border-radius: 4px; width: 24px; height: 24px; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0;
+  }
+  .hand-drawn-checkbox.checked::after { content: '✓'; font-family: 'Gochi Hand', cursive; font-size: 22px; color: #b7006f; line-height: 1; }
+  .view { display: none; }
+  .view.active { display: flex; }
+  .fade-in { animation: fadeIn 0.2s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .nav-item.active { background-color: #dfe3e8; color: #1b1c1d; border-radius: 0.5rem; }
+  #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1b1c1d; color: white; padding: 12px 24px; border-radius: 12px; font-size: 14px; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+  #toast.show { opacity: 1; }
+  @media (max-width: 1024px) {
+    .sidebar { width: 72px !important; }
+    .sidebar .nav-label, .sidebar .app-title, .sidebar .app-subtitle, .sidebar .user-info { display: none; }
+    .sidebar .nav-item { justify-content: center; padding: 12px; }
+    .sidebar .create-btn span { display: none; }
+    .sidebar .user-section { display: none; }
+    main { margin-left: 72px !important; }
+  }
+</style>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
+
+const SUPABASE_URL = 'https://pftjojkgzgthayfabhhf.supabase.co'
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmdGpvamtnemd0aGF5ZmFiaGhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNDE5MjcsImV4cCI6MjA5NjYxNzkyN30.CfqAZjKmiDexilbRMMRWl54-UZPVGz9Abu3tXpaQ0y4'
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+let userId = null
+let currentMonth = new Date().getMonth()
+let currentYear = new Date().getFullYear()
+let events = []
+let tasks = []
+
+const $ = id => document.getElementById(id)
+const toast = msg => { const t = $('toast'); if (!t) return; t.textContent = msg; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2500) }
+
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'))
+  const el = $(id); if (el) el.classList.add('active')
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'))
+  const navMap = { 'calendar-view': 'nav-dashboard', 'event-view': 'nav-event', 'tasks-view': 'nav-tasks' }
+  const navEl = $(navMap[id]); if (navEl) navEl.classList.add('active')
+}
+
+function renderApp() {
+  $('app').innerHTML = `
+    <div id="app-screen" class="flex h-screen overflow-hidden bg-[#faf9fa]">
+      <aside class="sidebar fixed left-0 top-0 h-full w-[280px] bg-white flex flex-col p-4 gap-3 border-r border-[#c2c6d2]/30 z-50" style="transition:width 0.2s">
+        <div class="px-4 py-4">
+          <h1 class="app-title text-2xl font-bold text-[#b7006f]" style="font-family:'Gochi Hand',cursive">Minha Agenda</h1>
+          <p class="app-subtitle text-xs text-[#424751] opacity-70">Elevated Planner</p>
         </div>
-        <div class="day-events" id="day-events"></div>
+        <button id="nav-event" class="nav-item create-btn flex items-center gap-3 mx-2 px-4 py-3 bg-[#b7006f] text-white rounded-xl font-semibold hover:opacity-90 active:scale-95 transition-all shadow-md" style="border:none;cursor:pointer">
+          <span class="material-symbols-outlined">add</span>
+          <span>Novo Evento</span>
+        </button>
+        <nav class="flex flex-col gap-1 px-2 mt-2">
+          <a id="nav-dashboard" class="nav-item flex items-center gap-3 px-4 py-3 text-[#5a5f63] hover:bg-[#e9e8e9] rounded-lg transition-all cursor-pointer active">
+            <span class="material-symbols-outlined" style="font-variation-settings:'FILL'1">calendar_today</span>
+            <span class="nav-label">Dashboard</span>
+          </a>
+          <a id="nav-tasks" class="nav-item flex items-center gap-3 px-4 py-3 text-[#5a5f63] hover:bg-[#e9e8e9] rounded-lg transition-all cursor-pointer">
+            <span class="material-symbols-outlined">task_alt</span>
+            <span class="nav-label">Tarefas</span>
+          </a>
+          <a id="nav-settings" class="nav-item flex items-center gap-3 px-4 py-3 text-[#5a5f63] hover:bg-[#e9e8e9] rounded-lg transition-all cursor-pointer">
+            <span class="material-symbols-outlined">settings</span>
+            <span class="nav-label">Config</span>
+          </a>
+        </nav>
+        <div class="user-section mt-auto p-4 flex items-center gap-3 border-t border-[#c2c6d2]/30">
+          <div class="w-10 h-10 rounded-full bg-[#b7006f] flex items-center justify-center text-white font-bold text-lg">A</div>
+          <div class="user-info"><p class="text-sm font-semibold text-[#1b1c1d]">Anonimo</p><p class="text-xs text-[#424751]">Modo Local</p></div>
+        </div>
+      </aside>
+      <main class="flex-1 ml-[280px] h-screen flex flex-col overflow-hidden" style="transition:margin-left 0.2s">
+        <header class="h-16 bg-white/80 backdrop-blur-md flex items-center justify-between px-6 border-b border-[#c2c6d2]/20 flex-shrink-0">
+          <h2 id="view-title" class="text-xl font-bold text-[#1b1c1d]">Dashboard</h2>
+          <div class="flex items-center gap-4">
+            <span class="text-sm text-[#727782] hidden md:inline">Modo Anonimo</span>
+          </div>
+        </header>
+        <div class="flex-1 overflow-hidden">
+          <!-- CALENDAR VIEW -->
+          <div id="calendar-view" class="view active flex-1 h-full flex flex-col">
+            <div class="flex-1 flex overflow-hidden p-4 gap-4" style="height:calc(100% - 0px)">
+              <section class="flex-1 bg-white rounded-xl shadow-sm border border-[#c2c6d2]/30 overflow-hidden flex flex-col">
+                <div class="flex items-center justify-between px-6 py-3 border-b border-[#c2c6d2]/20">
+                  <div class="flex items-center gap-3">
+                    <button id="prev-month" class="p-2 hover:bg-[#f5f3f4] rounded-full transition-colors bg-transparent border-none cursor-pointer"><span class="material-symbols-outlined">chevron_left</span></button>
+                    <h3 id="month-title" class="text-lg font-bold text-[#1b1c1d] min-w-[200px] text-center"></h3>
+                    <button id="next-month" class="p-2 hover:bg-[#f5f3f4] rounded-full transition-colors bg-transparent border-none cursor-pointer"><span class="material-symbols-outlined">chevron_right</span></button>
+                  </div>
+                  <button id="today-btn" class="text-sm px-3 py-1.5 bg-[#f5f3f4] rounded-lg hover:bg-[#e9e8e9] transition-colors font-medium border-none cursor-pointer">Hoje</button>
+                </div>
+                <div class="grid grid-cols-7 border-b border-[#c2c6d2]/20 bg-[#faf9fa]">
+                  ${['Dom','Seg','Ter','Qua','Qui','Sex','Sab'].map(d => `<div class="py-2 text-center text-xs font-semibold text-[#727782] uppercase tracking-wider">${d}</div>`).join('')}
+                </div>
+                <div id="calendar-grid" class="flex-1 calendar-grid overflow-y-auto"></div>
+              </section>
+              <aside id="today-agenda" class="w-[300px] flex-shrink-0 bg-white rounded-xl shadow-sm border border-[#c2c6d2]/30 flex flex-col sidebar-paper overflow-hidden hidden md:flex">
+                <div class="p-4 border-b border-[#c2c6d2]/20 bg-white/80">
+                  <h3 class="font-semibold text-[#1b1c1d]">Agenda de Hoje</h3>
+                  <p id="today-date" class="handwritten-text text-[#424751] text-sm"></p>
+                </div>
+                <div id="today-events" class="flex-1 p-4 space-y-4 overflow-y-auto"></div>
+              </aside>
+            </div>
+          </div>
+          <!-- EVENT VIEW -->
+          <div id="event-view" class="view flex-1 h-full p-6 overflow-y-auto">
+            <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-sm border border-[#c2c6d2]/30 p-8">
+              <h2 class="text-2xl font-bold text-[#1b1c1d] mb-6" style="font-family:'Gochi Hand',cursive">Novo Evento</h2>
+              <form id="event-form" class="space-y-6">
+                <div>
+                  <label class="text-sm font-medium text-[#424751] uppercase tracking-wider">Titulo</label>
+                  <div class="handwriting-zone rounded-lg border border-[#c2c6d2]/40 mt-1 h-14 flex items-center px-4">
+                    <input id="ev-title" class="w-full bg-transparent border-none text-xl" style="font-family:'Patrick Hand',cursive;outline:none" placeholder="Escreva o titulo aqui..." required>
+                  </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="text-sm font-medium text-[#424751] uppercase tracking-wider">Data</label>
+                    <div class="relative mt-1">
+                      <span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#b7006f]" style="font-size:20px">calendar_today</span>
+                      <input id="ev-date" type="date" class="w-full h-12 bg-[#f5f3f4] border border-[#c2c6d2] rounded-lg pl-10 pr-3 text-sm focus:ring-2 focus:ring-[#b7006f]">
+                    </div>
+                  </div>
+                  <div>
+                    <label class="text-sm font-medium text-[#424751] uppercase tracking-wider">Horario</label>
+                    <div class="relative mt-1">
+                      <span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#b7006f]" style="font-size:20px">schedule</span>
+                      <input id="ev-time" type="time" class="w-full h-12 bg-[#f5f3f4] border border-[#c2c6d2] rounded-lg pl-10 pr-3 text-sm focus:ring-2 focus:ring-[#b7006f]">
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label class="text-sm font-medium text-[#424751] uppercase tracking-wider">Local</label>
+                  <div class="handwriting-zone rounded-lg border border-[#c2c6d2]/40 mt-1 h-12 flex items-center px-4">
+                    <input id="ev-location" class="w-full bg-transparent border-none text-lg" style="font-family:'Patrick Hand',cursive;outline:none" placeholder="Onde vai ser?">
+                  </div>
+                </div>
+                <div>
+                  <label class="text-sm font-medium text-[#424751] uppercase tracking-wider">Descricao</label>
+                  <div class="handwriting-zone rounded-lg border border-[#c2c6d2]/40 mt-1 p-2" style="min-height:120px">
+                    <textarea id="ev-desc" class="w-full bg-transparent border-none p-2 text-base" style="font-family:'Patrick Hand',cursive;outline:none;line-height:2rem;resize:none" placeholder="Notas ou descricao..." rows="4"></textarea>
+                  </div>
+                </div>
+                <div class="flex items-center gap-4">
+                  <div class="flex-1">
+                    <label class="text-sm font-medium text-[#424751] uppercase tracking-wider">Lembrete</label>
+                    <select id="ev-reminder" class="w-full h-12 bg-[#f5f3f4] border border-[#c2c6d2] rounded-lg px-3 text-sm mt-1 focus:ring-2 focus:ring-[#b7006f]">
+                      <option value="Na hora">Na hora do evento</option>
+                      <option value="15 min">15 minutos antes</option>
+                      <option value="1 hora">1 hora antes</option>
+                      <option value="1 dia">1 dia antes</option>
+                    </select>
+                  </div>
+                  <div class="flex-1">
+                    <label class="text-sm font-medium text-[#424751] uppercase tracking-wider">Categoria</label>
+                    <div class="flex gap-3 mt-3">
+                      <button type="button" class="cat-btn w-10 h-10 rounded-full bg-[#b7006f] ring-2 ring-offset-2 ring-[#b7006f] flex items-center justify-center text-white border-none cursor-pointer" data-cat="default"><span class="material-symbols-outlined" style="font-size:18px">check</span></button>
+                      <button type="button" class="cat-btn w-10 h-10 rounded-full bg-[#0b6e00] border-none cursor-pointer hover:scale-110 transition-transform" data-cat="pessoal"></button>
+                      <button type="button" class="cat-btn w-10 h-10 rounded-full bg-[#ba1a1a] border-none cursor-pointer hover:scale-110 transition-transform" data-cat="trabalho"></button>
+                      <button type="button" class="cat-btn w-10 h-10 rounded-full bg-[#5a5f63] border-none cursor-pointer hover:scale-110 transition-transform" data-cat="saude"></button>
+                    </div>
+                  </div>
+                </div>
+                <div class="flex justify-end gap-3 pt-4 border-t border-[#c2c6d2]/20">
+                  <button type="button" id="ev-cancel" class="px-6 py-2.5 rounded-lg text-[#5a5f63] hover:bg-[#f5f3f4] transition-all font-medium bg-transparent border-none cursor-pointer">Cancelar</button>
+                  <button type="submit" class="px-8 py-2.5 bg-[#b7006f] text-white rounded-lg font-semibold hover:opacity-90 transition-all active:scale-[0.98] shadow-md flex items-center gap-2 border-none cursor-pointer">
+                    <span class="material-symbols-outlined" style="font-size:18px">save</span> Salvar Evento
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+          <!-- TASKS VIEW -->
+          <div id="tasks-view" class="view flex-1 h-full p-6 overflow-y-auto">
+            <div class="max-w-3xl mx-auto">
+              <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-[#1b1c1d]" style="font-family:'Gochi Hand',cursive">Tarefas</h2>
+                <button id="add-task-btn" class="px-5 py-2.5 bg-[#b7006f] text-white rounded-lg font-semibold hover:opacity-90 transition-all active:scale-[0.98] shadow-md flex items-center gap-2 border-none cursor-pointer">
+                  <span class="material-symbols-outlined" style="font-size:18px">add</span> Nova Tarefa
+                </button>
+              </div>
+              <div id="tasks-list" class="space-y-3"></div>
+            </div>
+          </div>
+          <!-- SETTINGS VIEW -->
+          <div id="settings-view" class="view flex-1 h-full p-6 overflow-y-auto">
+            <div class="max-w-xl mx-auto bg-white rounded-xl shadow-sm border border-[#c2c6d2]/30 p-8">
+              <h2 class="text-2xl font-bold text-[#1b1c1d] mb-6">Configuracoes</h2>
+              <div class="space-y-4">
+                <div class="p-4 bg-[#f5f3f4] rounded-lg">
+                  <p class="font-medium text-[#1b1c1d]">Modo Anonimo</p>
+                  <p class="text-sm text-[#727782]">Dados salvos na nuvem sem login</p>
+                </div>
+                <div class="p-4 bg-[#f5f3f4] rounded-lg">
+                  <p class="font-medium text-[#1b1c1d]">Sobre</p>
+                  <p class="text-sm text-[#727782]">Minha Agenda v1.0 • Dados na nuvem</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+      <div id="toast"></div>
+    </div>`
+
+  // Navigation
+  $('nav-dashboard').onclick = () => { showView('calendar-view'); $('view-title').textContent = 'Dashboard' }
+  $('nav-tasks').onclick = () => { showView('tasks-view'); $('view-title').textContent = 'Tarefas'; loadTasks() }
+  $('nav-settings').onclick = () => { showView('settings-view'); $('view-title').textContent = 'Config' }
+  $('nav-event').onclick = () => { showView('event-view'); $('view-title').textContent = 'Novo Evento'; setupEventForm() }
+  $('ev-cancel').onclick = () => { showView('calendar-view'); $('view-title').textContent = 'Dashboard' }
+
+  $('prev-month').onclick = () => { currentMonth--; if (currentMonth < 0) { currentMonth = 11; currentYear-- } renderCalendar() }
+  $('next-month').onclick = () => { currentMonth++; if (currentMonth > 11) { currentMonth = 0; currentYear++ } renderCalendar() }
+  $('today-btn').onclick = () => { const d = new Date(); currentMonth = d.getMonth(); currentYear = d.getFullYear(); renderCalendar() }
+
+  loadEvents().then(() => { renderCalendar(); setupEventForm(); setupTasks() })
+}
+
+// ===================== EVENTS =====================
+async function loadEvents() {
+  if (!userId) return
+  const { data, error } = await supabase.from('events').select('*').eq('user_id', userId).order('start_date')
+  if (!error && data) events = data
+}
+
+function renderCalendar() {
+  const grid = $('calendar-grid')
+  if (!grid) return
+  const monthNames = ['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
+  $('month-title').textContent = `${monthNames[currentMonth]} ${currentYear}`
+
+  const firstDay = new Date(currentYear, currentMonth, 1).getDay()
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate()
+  const daysInPrevMonth = new Date(currentYear, currentMonth, 0).getDate()
+  const today = new Date()
+  let html = ''
+
+  const prevStart = daysInPrevMonth - firstDay + 1
+  for (let d = prevStart; d <= daysInPrevMonth; d++) html += `<div class="calendar-day other-month"><span class="text-xs font-medium">${d}</span></div>`
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const isToday = d === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear()
+    const dateStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`
+    const dayEvents = events.filter(e => e.start_date === dateStr)
+    let evHtml = ''
+    const colorMap = { default: '#b7006f', pessoal: '#0b6e00', trabalho: '#ba1a1a', saude: '#5a5f63' }
+    const bgMap = { default: '#fdf2f8', pessoal: '#f0fdf4', trabalho: '#fef2f2', saude: '#f5f3f4' }
+    dayEvents.slice(0, 3).forEach(e => {
+      const c = colorMap[e.category] || '#b7006f'
+      const b = bgMap[e.category] || '#fdf2f8'
+      evHtml += `<div class="event-chip" style="color:${c};background:${b}">${e.title}</div>`
+    })
+    if (dayEvents.length > 3) evHtml += `<div class="text-xs text-[#727782] handwritten-text">+${dayEvents.length - 3} mais</div>`
+    html += `<div class="calendar-day ${isToday ? 'today' : ''}" data-date="${dateStr}"><span class="text-xs font-bold ${isToday ? 'text-[#b7006f]' : ''}">${d}</span>${evHtml}</div>`
+  }
+
+  const totalCells = firstDay + daysInMonth
+  const remaining = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7)
+  for (let i = 1; i <= remaining; i++) html += `<div class="calendar-day other-month"><span class="text-xs font-medium">${i}</span></div>`
+
+  grid.innerHTML = html
+  renderTodayAgenda()
+}
+
+function renderTodayAgenda() {
+  const container = $('today-events')
+  if (!container) return
+  const today = new Date()
+  const dateStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`
+  const weekdays = ['Domingo','Segunda-feira','Terca-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sabado']
+  if ($('today-date')) $('today-date').textContent = `${weekdays[today.getDay()]}, ${today.getDate()}/${today.getMonth()+1}`
+
+  const dayEvents = events.filter(e => e.start_date === dateStr)
+  if (dayEvents.length === 0) { container.innerHTML = '<p class="text-[#727782] text-sm" style="font-family:\'Patrick Hand\',cursive">Nenhum evento hoje ✨</p>'; return }
+
+  container.innerHTML = dayEvents.map(e => `
+    <div class="flex gap-3 group">
+      <div class="flex flex-col items-center">
+        <span class="handwritten-text font-bold text-sm" style="font-family:'Patrick Hand',cursive">${e.start_time ? e.start_time.slice(0,5) : '--:--'}</span>
+        <div class="w-px flex-1 border-l border-dashed border-[#c2c6d2]/60 my-1"></div>
       </div>
-    </section>
-
-    <div id="modal-overlay" class="modal-overlay hidden">
-      <div class="modal-container">
-        <section id="view-event-form" class="modal-content">
-          <div class="modal-header">
-            <button id="btn-form-back" class="btn-icon">&#9664;</button>
-            <h2 id="form-title">Novo Evento</h2>
-            <div class="spacer"></div>
-          </div>
-          <div class="modal-body">
-            <div class="field-group">
-              <label class="field-label">Título</label>
-              <div class="ink-canvas-wrap">
-                <canvas id="canvas-title" class="ink-canvas" data-height="60"></canvas>
-              </div>
-              <div class="ink-toolbar" id="toolbar-title">
-                <button class="ink-color-btn" data-color="#1C1C1E" style="background:#1C1C1E" aria-label="Preto"></button>
-                <button class="ink-color-btn active" data-color="#007AFF" style="background:#007AFF" aria-label="Azul"></button>
-                <button class="ink-color-btn" data-color="#FF3B30" style="background:#FF3B30" aria-label="Vermelho"></button>
-                <button class="ink-color-btn" data-color="#34C759" style="background:#34C759" aria-label="Verde"></button>
-                <span class="toolbar-sep"></span>
-                <button class="ink-size-btn active" data-size="3" aria-label="Fino">―</button>
-                <button class="ink-size-btn" data-size="6" aria-label="Médio">━</button>
-                <button class="ink-size-btn" data-size="10" aria-label="Grosso">━━</button>
-                <span class="toolbar-sep"></span>
-                <button class="ink-undo-btn" aria-label="Desfazer">↩</button>
-                <button class="ink-eraser-btn" aria-label="Borracha">⊘</button>
-                <button class="ink-clear-btn" aria-label="Limpar">✕</button>
-              </div>
-            </div>
-
-            <div class="field-row">
-              <div class="field">
-                <label class="field-label">Data</label>
-                <input type="date" id="event-date" class="field-input">
-              </div>
-              <div class="field">
-                <label class="field-label">Hora</label>
-                <input type="time" id="event-time" class="field-input">
-              </div>
-            </div>
-
-            <div class="field-group">
-              <label class="field-label">Categoria</label>
-              <div class="category-selector" id="category-selector"></div>
-            </div>
-
-            <div class="field-group">
-              <label class="field-label">Repetir</label>
-              <div class="recurrence-selector" id="recurrence-selector"></div>
-            </div>
-
-            <div class="field-group">
-              <label class="field-label">Observações</label>
-              <div class="ink-canvas-wrap tall">
-                <canvas id="canvas-notes" class="ink-canvas" data-height="150"></canvas>
-              </div>
-              <div class="ink-toolbar" id="toolbar-notes">
-                <button class="ink-color-btn" data-color="#1C1C1E" style="background:#1C1C1E" aria-label="Preto"></button>
-                <button class="ink-color-btn active" data-color="#007AFF" style="background:#007AFF" aria-label="Azul"></button>
-                <button class="ink-color-btn" data-color="#FF3B30" style="background:#FF3B30" aria-label="Vermelho"></button>
-                <button class="ink-color-btn" data-color="#34C759" style="background:#34C759" aria-label="Verde"></button>
-                <span class="toolbar-sep"></span>
-                <button class="ink-size-btn active" data-size="3" aria-label="Fino">―</button>
-                <button class="ink-size-btn" data-size="6" aria-label="Médio">━</button>
-                <button class="ink-size-btn" data-size="10" aria-label="Grosso">━━</button>
-                <span class="toolbar-sep"></span>
-                <button class="ink-undo-btn" aria-label="Desfazer">↩</button>
-                <button class="ink-eraser-btn" aria-label="Borracha">⊘</button>
-                <button class="ink-clear-btn" aria-label="Limpar">✕</button>
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button id="btn-save" class="btn-primary btn-large">Salvar Evento</button>
-            <button id="btn-delete-event" class="btn-danger btn-large hidden">Excluir Evento</button>
-          </div>
-        </section>
-
-        <section id="view-event-detail" class="modal-content">
-          <div class="modal-header">
-            <button id="btn-detail-back" class="btn-icon">&#9664;</button>
-            <h2>Evento</h2>
-            <div class="spacer"></div>
-          </div>
-          <div class="modal-body">
-            <div class="detail-category-badge" id="detail-category-badge"></div>
-            <div class="ink-canvas-wrap">
-              <canvas id="detail-title-canvas" class="ink-canvas" data-height="60"></canvas>
-            </div>
-            <div class="detail-info">
-              <p id="detail-date" class="detail-row">&#128197;</p>
-              <p id="detail-time" class="detail-row">&#9200;</p>
-              <p id="detail-recurrence" class="detail-row">&#128257;</p>
-            </div>
-            <label class="field-label">Observações</label>
-            <div class="ink-canvas-wrap tall">
-              <canvas id="detail-notes-canvas" class="ink-canvas" data-height="200"></canvas>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button id="btn-edit-event" class="btn-primary btn-large">Editar</button>
-            <button id="btn-share-event" class="btn-secondary btn-large">Compartilhar</button>
-            <button id="btn-export-event" class="btn-secondary btn-large">Exportar</button>
-            <button id="btn-delete-from-detail" class="btn-danger btn-large">Excluir</button>
-          </div>
-        </section>
+      <div class="flex-1 p-2 -mt-1" style="transform:rotate(${Math.random() > 0.5 ? '-1deg' : '1deg'})">
+        <p class="text-lg text-[#1b1c1d] leading-tight" style="font-family:'Gochi Hand',cursive">${e.title}</p>
+        ${e.location ? `<p class="text-[#727782] text-sm" style="font-family:'Patrick Hand',cursive">${e.location}</p>` : ''}
+        <div class="scribble-border w-full opacity-20 mt-1"></div>
+        <button class="del-event text-[#ba1a1a] text-xs mt-1 opacity-0 group-hover:opacity-100 transition-opacity bg-transparent border-none cursor-pointer" style="font-family:'Patrick Hand',cursive" data-id="${e.id}">excluir</button>
       </div>
-    </div>
+    </div>`).join('')
 
-    <div id="toast" class="toast hidden"></div>
-  </div>
+  container.querySelectorAll('.del-event').forEach(btn => {
+    btn.onclick = async () => {
+      if (!confirm('Excluir este evento?')) return
+      await supabase.from('events').delete().eq('id', btn.dataset.id)
+      toast('Evento excluido')
+      loadEvents().then(() => renderCalendar())
+    }
+  })
+}
 
-  <script src="js/utils.js"></script>
-  <script src="js/storage.js"></script>
-  <script src="js/ink.js"></script>
-  <script src="js/calendar.js"></script>
-  <script src="js/events.js"></script>
-  <script src="js/app.js"></script>
+function setupEventForm() {
+  if (!$('event-form')) return
+  const today = new Date()
+  if ($('ev-date')) $('ev-date').value = today.toISOString().split('T')[0]
+  if ($('ev-time')) $('ev-time').value = '09:00'
+
+  let selectedCat = 'default'
+  document.querySelectorAll('.cat-btn').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.cat-btn').forEach(b => { b.classList.remove('ring-2', 'ring-offset-2'); b.innerHTML = '' })
+      btn.classList.add('ring-2', 'ring-offset-2')
+      const colors = { default: 'ring-[#b7006f]', pessoal: 'ring-[#0b6e00]', trabalho: 'ring-[#ba1a1a]', saude: 'ring-[#5a5f63]' }
+      btn.classList.add(colors[btn.dataset.cat] || 'ring-[#b7006f]')
+      btn.innerHTML = '<span class="material-symbols-outlined text-white" style="font-size:18px">check</span>'
+      selectedCat = btn.dataset.cat
+    }
+  })
+
+  $('event-form').onsubmit = async (e) => {
+    e.preventDefault()
+    const title = $('ev-title').value.trim()
+    if (!title) { toast('Digite um titulo'); return }
+    const submitBtn = e.target.querySelector('button[type="submit"]')
+    submitBtn.disabled = true; submitBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px">sync</span> Salvando...'
+    const { error } = await supabase.from('events').insert({
+      user_id: userId, title,
+      description: $('ev-desc').value,
+      location: $('ev-location').value,
+      start_date: $('ev-date').value,
+      start_time: $('ev-time').value || null,
+      category: selectedCat,
+      reminder: $('ev-reminder').value
+    })
+    submitBtn.disabled = false; submitBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px">save</span> Salvar Evento'
+    if (error) { toast('Erro: ' + error.message); return }
+    toast('Evento criado!')
+    $('ev-title').value = ''; $('ev-desc').value = ''; $('ev-location').value = ''
+    await loadEvents(); renderCalendar()
+    showView('calendar-view'); $('view-title').textContent = 'Dashboard'
+  }
+}
+
+// ===================== TASKS =====================
+async function loadTasks() {
+  if (!$('tasks-list') || !userId) return
+  const { data, error } = await supabase.from('tasks').select('*').eq('user_id', userId).order('created_at', { ascending: false })
+  if (error || !data) return
+  tasks = data
+  renderTasks()
+}
+
+function renderTasks() {
+  const container = $('tasks-list')
+  if (!container) return
+  if (tasks.length === 0) { container.innerHTML = '<p class="text-[#727782] text-center py-8" style="font-family:\'Patrick Hand\',cursive;font-size:1.25rem">Nenhuma tarefa ainda ✨</p>'; return }
+  container.innerHTML = tasks.map(t => {
+    const pc = { normal: 'bg-[#dfe3e8] text-[#424751]', alta: 'bg-[#ffdad6] text-[#ba1a1a]', urgente: 'bg-[#ba1a1a] text-white' }
+    return `
+    <div class="paper-card p-4 rounded-lg flex items-center justify-between group ${t.completed ? 'opacity-60' : ''}">
+      <div class="flex items-center gap-4">
+        <div class="hand-drawn-checkbox ${t.completed ? 'checked' : ''}" data-id="${t.id}"></div>
+        <div>
+          <h4 class="text-lg ${t.completed ? 'line-through text-[#94a3b8]' : 'text-[#1b1c1d]'}" style="font-family:'Gochi Hand',cursive">${t.title}</h4>
+          ${t.due_date ? `<p class="text-sm text-[#727782]" style="font-family:'Patrick Hand',cursive">${t.due_date}</p>` : ''}
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        ${t.priority !== 'normal' ? `<span class="text-xs px-2 py-0.5 rounded-lg font-medium ${pc[t.priority] || pc.normal}">${t.priority}</span>` : ''}
+        <button class="del-task text-[#ba1a1a] opacity-0 group-hover:opacity-100 transition-opacity bg-transparent border-none cursor-pointer" data-id="${t.id}"><span class="material-symbols-outlined" style="font-size:18px">delete</span></button>
+      </div>
+    </div>`
+  }).join('')
+
+  container.querySelectorAll('.hand-drawn-checkbox').forEach(cb => {
+    cb.onclick = async () => {
+      const task = tasks.find(t => t.id === cb.dataset.id)
+      if (!task) return
+      await supabase.from('tasks').update({ completed: !task.completed }).eq('id', cb.dataset.id)
+      loadTasks()
+    }
+  })
+  container.querySelectorAll('.del-task').forEach(btn => {
+    btn.onclick = async () => {
+      if (!confirm('Excluir tarefa?')) return
+      await supabase.from('tasks').delete().eq('id', btn.dataset.id)
+      toast('Tarefa excluida')
+      loadTasks()
+    }
+  })
+}
+
+function setupTasks() {
+  if (!$('add-task-btn')) return
+  $('add-task-btn').onclick = () => {
+    const container = $('tasks-list')
+    const form = document.createElement('div')
+    form.className = 'bg-white rounded-xl shadow-sm border border-[#b7006f]/40 p-4 fade-in'
+    const today = new Date().toISOString().split('T')[0]
+    form.innerHTML = `
+      <div class="handwriting-zone rounded-lg border border-[#c2c6d2]/40 h-12 flex items-center px-4 mb-3">
+        <input id="new-task-input" class="w-full bg-transparent border-none text-lg" style="font-family:'Patrick Hand',cursive;outline:none" placeholder="Digite a tarefa...">
+      </div>
+      <div class="flex items-center gap-3 mb-3">
+        <input id="new-task-date" type="date" value="${today}" class="flex-1 h-10 bg-[#f5f3f4] border border-[#c2c6d2] rounded-lg px-3 text-sm focus:ring-2 focus:ring-[#b7006f]">
+        <select id="new-task-priority" class="h-10 bg-[#f5f3f4] border border-[#c2c6d2] rounded-lg px-3 text-sm focus:ring-2 focus:ring-[#b7006f]">
+          <option value="normal">Normal</option>
+          <option value="alta">Alta</option>
+          <option value="urgente">Urgente</option>
+        </select>
+      </div>
+      <div class="flex justify-end gap-2">
+        <button id="new-task-cancel" class="px-4 py-1.5 text-sm rounded-lg text-[#727782] hover:bg-[#f5f3f4] bg-transparent border-none cursor-pointer">Cancelar</button>
+        <button id="new-task-save" class="px-6 py-1.5 text-sm bg-[#b7006f] text-white rounded-lg font-semibold hover:opacity-90 border-none cursor-pointer">Salvar</button>
+      </div>`
+    container.prepend(form)
+    const input = $('new-task-input'); if (input) input.focus()
+    const cancel = $('new-task-cancel'); if (cancel) cancel.onclick = () => form.remove()
+    const save = $('new-task-save')
+    if (save) save.onclick = async () => {
+      const input2 = $('new-task-input')
+      const title = input2 ? input2.value.trim() : ''
+      if (!title) { toast('Digite o titulo'); return }
+      const { error } = await supabase.from('tasks').insert({
+        user_id: userId, title,
+        due_date: ($('new-task-date') || {}).value || null,
+        priority: ($('new-task-priority') || {}).value || 'normal'
+      })
+      if (error) { toast('Erro: ' + error.message); return }
+      toast('Tarefa criada!')
+      form.remove(); loadTasks()
+    }
+  }
+}
+
+// ===================== INIT =====================
+async function init() {
+  try {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session?.user) {
+      userId = session.user.id
+      renderApp()
+    } else {
+      const { data, error } = await supabase.auth.signInAnonymously()
+      if (error) throw error
+      userId = data.user.id
+      renderApp()
+    }
+  } catch(e) {
+    $('app').innerHTML = '<div style="text-align:center;padding:40px;color:#ba1a1a"><h2>Erro ao conectar</h2><p>' + e.message + '</p><button onclick="location.reload()" style="margin-top:16px;padding:12px 24px;background:#b7006f;color:white;border:none;border-radius:8px;cursor:pointer">Tentar novamente</button></div>'
+  }
+}
+
+supabase.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_IN' && session?.user && !userId) {
+    userId = session.user.id
+    renderApp()
+  }
+})
+
+init()
+</script>
 </body>
 </html>
