@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Agenda - Task Management (Handwriting Edition)</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&amp;family=Shadows+Into+Light&amp;family=Gochi+Hand&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {"surface-tint": "#b7006f", "on-primary-fixed-variant": "#8c0054", "secondary-container": "#dfe3e8", "on-background": "#1b1c1d", "primary-fixed-dim": "#ffb0ce", "on-surface-variant": "#424751", "on-error": "#ffffff", "on-tertiary-fixed": "#012200", error: "#ba1a1a", "surface-bright": "#faf9fa", "tertiary-container": "#278917", "on-tertiary": "#ffffff", "outline-variant": "#c2c6d2", "on-primary": "#ffffff", "on-secondary-fixed-variant": "#42474b", background: "#faf9fa", "inverse-primary": "#ffb0ce", "surface-container-high": "#e9e8e9", "on-primary-container": "#120007", "on-error-container": "#93000a", "on-secondary-fixed": "#171c20", "inverse-on-surface": "#f2f0f1", outline: "#727782", "on-secondary-container": "#606569", "surface-container-low": "#f5f3f4", surface: "#faf9fa", "inverse-surface": "#303031", "error-container": "#ffdad6", "secondary-fixed": "#dfe3e8", "surface-dim": "#dbdadb", "surface-variant": "#e3e2e3", secondary: "#5a5f63", tertiary: "#0b6e00", "on-surface": "#1b1c1d", "tertiary-fixed": "#95fa7c", "primary-container": "#e3078b", "surface-container-highest": "#e3e2e3", "surface-container": "#efedee", "on-tertiary-fixed-variant": "#065300", "on-primary-fixed": "#3e0022", "on-secondary": "#ffffff", "on-tertiary-container": "#000700", "surface-container-lowest": "#ffffff", "primary-fixed": "#ffd9e5", primary: "#b7006f", "secondary-fixed-dim": "#c2c7cc", "tertiary-fixed-dim": "#7add63"}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}, spacing: {unit: "8px", stack_gap: "12px", sidebar_width: "280px", gutter: "24px", margin_tablet: "32px", card_padding: "16px"}, fontFamily: {"title-md": ["Inter"], "body-md": ["Inter"], "label-sm": ["Inter"], "headline-md": ["Inter"], "display-date": ["Inter"], "title-lg": ["Inter"], "headline-lg": ["Inter"], "body-lg": ["Inter"], "label-caps": ["Inter"], handwriting: ["'Gochi Hand'", "cursive"], "handwriting-alt": ["'Caveat'", "cursive"], headline: ["Inter"], display: ["Inter"], body: ["Inter"], label: ["Inter"]}, fontSize: {"title-md": ["16px", {lineHeight: "24px", fontWeight: "600"}], "body-md": ["14px", {lineHeight: "20px", fontWeight: "400"}], "label-sm": ["12px", {lineHeight: "16px", fontWeight: "500"}], "headline-md": ["24px", {lineHeight: "32px", fontWeight: "600"}], "display-date": ["48px", {lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700"}], "title-lg": ["20px", {lineHeight: "28px", fontWeight: "600"}], "headline-lg": ["32px", {lineHeight: "40px", letterSpacing: "-0.01em", fontWeight: "600"}], "body-lg": ["16px", {lineHeight: "24px", fontWeight: "400"}], "label-caps": ["12px", {lineHeight: "16px", letterSpacing: "0.05em", fontWeight: "700"}]}}}};</script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #F1F5F9; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-scale:active { transform: scale(0.98); transition: transform 0.15s ease; }
+        
+        /* Digital Ink Stylings */
+        .handwritten-text {
+            font-family: 'Gochi Hand', cursive;
+            font-size: 1.25rem;
+            color: #1E293B;
+            letter-spacing: 0.02em;
+        }
+        .handwritten-sub {
+            font-family: 'Caveat', cursive;
+            font-size: 1.1rem;
+            color: #64748B;
+        }
+        
+        .paper-card {
+            background-image: linear-gradient(#e1e5f0 1px, transparent 1px);
+            background-size: 100% 2rem;
+            background-color: #fff;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.05);
+            position: relative;
+            border: 1px solid #e2e8f0;
+            transform: rotate(-0.5deg);
+        }
+        .paper-card:nth-child(even) {
+            transform: rotate(0.5deg);
+            background-color: #fdfdfd;
+        }
+        .sticky-note {
+            background-color: #fff9c4;
+            transform: rotate(1deg);
+            border-bottom-right-radius: 40px 5px;
+        }
+
+        .scribble-box {
+            border-bottom: 2px solid #cbd5e1;
+            border-radius: 0;
+            background: transparent;
+        }
+        
+        .hand-drawn-checkbox {
+            border: 2px solid #64748B;
+            border-radius: 4px;
+            width: 24px;
+            height: 24px;
+            position: relative;
+            transition: all 0.2s;
+            cursor: pointer;
+            overflow: visible;
+        }
+        .hand-drawn-checkbox.checked::after {
+            content: '✓';
+            font-family: 'Gochi Hand', cursive;
+            font-size: 28px;
+            position: absolute;
+            top: -10px;
+            left: 2px;
+            color: #003ec7;
+        }
+    </style>
+</head>
+<body class="bg-slate-100">
+<!-- SideNavBar (Fixed Left) - High Contrast & Pencil Optimized -->
+<aside class="fixed left-0 top-0 h-full w-[280px] bg-white border-r border-slate-200 flex flex-col p-8 gap-12 z-50">
+<div class="flex flex-col gap-1">
+<h1 class="font-headline-md text-headline-md font-bold text-primary">Agenda</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant opacity-70">Handwriting Mode</p>
+</div>
+<nav class="flex flex-col gap-4 flex-1">
+<a class="flex items-center gap-4 px-5 py-4 text-secondary hover:bg-slate-50 transition-colors rounded-xl active-scale" href="#">
+<span class="material-symbols-outlined text-[28px]" data-icon="calendar_today">calendar_today</span>
+<span class="font-title-md text-title-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-4 px-5 py-4 bg-primary text-on-primary rounded-xl active-scale shadow-md" href="#">
+<span class="material-symbols-outlined text-[28px]" data-icon="task_alt">task_alt</span>
+<span class="font-title-md text-title-md font-bold">Tasks</span>
+</a>
+<a class="flex items-center gap-4 px-5 py-4 text-secondary hover:bg-slate-50 transition-colors rounded-xl active-scale" href="#">
+<span class="material-symbols-outlined text-[28px]" data-icon="settings">settings</span>
+<span class="font-title-md text-title-md">Settings</span>
+</a>
+</nav>
+<button class="bg-primary text-on-primary py-5 px-6 rounded-2xl font-title-md flex items-center justify-center gap-3 shadow-xl shadow-primary/25 hover:opacity-95 active-scale mb-4">
+<span class="material-symbols-outlined text-[28px]">edit</span>
+        Quick Scribble
+    </button>
+</aside>
+<!-- Main Workspace -->
+<div class="ml-[280px] min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md flex justify-between items-center px-10 h-24 w-full border-b border-slate-100">
+<div class="flex items-center gap-4">
+<h2 class="font-headline-md text-headline-md font-bold text-on-surface">September 2023</h2>
+</div>
+<div class="flex items-center gap-8">
+<div class="relative hidden lg:flex items-end gap-2 pb-1">
+<span class="material-symbols-outlined text-outline">draw</span>
+<input class="scribble-box w-64 px-2 py-1 focus:ring-0 focus:outline-none placeholder:italic placeholder:font-handwriting placeholder:text-slate-400 font-handwriting text-xl" placeholder="Scribble to search..." type="text"/>
+</div>
+<button class="text-on-surface-variant hover:bg-slate-50 p-2 rounded-full active-scale">
+<span class="material-symbols-outlined text-[28px]" data-icon="notifications">notifications</span>
+</button>
+<button class="bg-primary text-on-primary px-8 py-3 rounded-xl font-title-md active-scale shadow-lg">
+                Add Event
+            </button>
+<img alt="User profile avatar" class="w-12 h-12 rounded-full border-2 border-primary/20 bg-white" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2nkyHQZbTS5ms0EVVy4BVYL8pN4GE_ziFOQt1mL90DH2vneBbUpRlotJ3HM4uiGiVv7N0xKylhOObn-Wpn-pnMeYOnGTPxeck3bpRJrHFDueusoXfGZyfmcMyKtRS1GSUsWBJOS3UlTyxygH3OwkJu-w5GxvbV3GZdycJ6fZ037LlZDtaTtbn_aKMbuk7PHW4-RD0DGWf2qWe7thLKS2YZSNjtTIghsoyWGi7Qo88w-y7kr7xAg1OB_edwV5j44USLFAztt-Jt2bm"/>
+</div>
+</header>
+<!-- Content Canvas -->
+<main class="flex-1 p-10 overflow-y-auto">
+<div class="max-w-4xl mx-auto flex flex-col gap-14">
+<!-- Today Section -->
+<section>
+<div class="flex items-center justify-between mb-8">
+<div class="flex items-center gap-4">
+<h3 class="font-headline-lg text-headline-lg text-on-surface font-bold">Today</h3>
+<span class="bg-primary-container text-on-primary-container px-4 py-1 rounded-full font-label-sm text-label-sm font-bold">4 Entries</span>
+</div>
+</div>
+<div class="grid gap-6">
+<!-- Task Card 1 (Paper Style) -->
+<div class="paper-card p-6 rounded-lg flex items-center justify-between group cursor-pointer active-scale transition-all">
+<div class="flex items-center gap-6">
+<div class="hand-drawn-checkbox" onclick="this.classList.toggle('checked'); this.nextElementSibling.querySelector('h4').classList.toggle('line-through')"></div>
+<div>
+<h4 class="handwritten-text">Finalize design system documentation</h4>
+<p class="handwritten-sub">Due today, 5:00 PM</p>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="bg-error-container text-on-error-container px-3 py-1 rounded-lg font-handwriting-alt text-lg flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-error"></span> Urgent
+                            </span>
+<button class="text-slate-400 p-2"><span class="material-symbols-outlined">more_horiz</span></button>
+</div>
+</div>
+<!-- Task Card 2 (Sticky Note Style) -->
+<div class="paper-card sticky-note p-6 rounded-sm flex items-center justify-between group cursor-pointer active-scale">
+<div class="flex items-center gap-6">
+<div class="hand-drawn-checkbox" onclick="this.classList.toggle('checked'); this.nextElementSibling.querySelector('h4').classList.toggle('line-through')"></div>
+<div>
+<h4 class="handwritten-text">Client review meeting prep</h4>
+<p class="handwritten-sub">2:30 PM • Zoom call</p>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-lg font-handwriting-alt text-lg">Normal</span>
+</div>
+</div>
+<!-- Task Card 3 -->
+<div class="paper-card p-6 rounded-lg flex items-center justify-between group cursor-pointer active-scale">
+<div class="flex items-center gap-6">
+<div class="hand-drawn-checkbox" onclick="this.classList.toggle('checked'); this.nextElementSibling.querySelector('h4').classList.toggle('line-through')"></div>
+<div>
+<h4 class="handwritten-text">Submit travel expense report</h4>
+<p class="handwritten-sub">Finance Portal</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Upcoming Section -->
+<section>
+<div class="flex items-center justify-between mb-8">
+<h3 class="font-headline-lg text-headline-lg text-slate-500 font-bold">Upcoming</h3>
+</div>
+<div class="grid gap-6 opacity-85">
+<div class="paper-card p-6 rounded-lg flex items-center justify-between border-dashed border-2">
+<div class="flex items-center gap-6">
+<div class="hand-drawn-checkbox"></div>
+<div>
+<h4 class="handwritten-text text-slate-500">Renew Adobe Creative Cloud</h4>
+<p class="handwritten-sub">Tomorrow • Auto-pay active</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Completed Section -->
+<section>
+<button class="flex items-center gap-3 mb-8 text-slate-400 hover:text-primary transition-colors active-scale" id="toggle-completed">
+<span class="material-symbols-outlined text-[32px]">expand_more</span>
+<h3 class="font-headline-lg text-headline-lg font-bold">Completed</h3>
+<span class="font-handwriting text-2xl">(12)</span>
+</button>
+<div class="grid gap-4 transition-all" id="completed-list">
+<div class="flex items-center justify-between p-5 bg-slate-200/50 rounded-xl opacity-60 grayscale border border-slate-300">
+<div class="flex items-center gap-6">
+<div class="hand-drawn-checkbox checked"></div>
+<h4 class="handwritten-text line-through">Draft Q4 marketing roadmap</h4>
+</div>
+</div>
+<div class="flex items-center justify-between p-5 bg-slate-200/50 rounded-xl opacity-60 grayscale border border-slate-300">
+<div class="flex items-center gap-6">
+<div class="hand-drawn-checkbox checked"></div>
+<h4 class="handwritten-text line-through">Buy birthday gift for Sarah</h4>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- FAB for Task Entry - Large for Pencil -->
+<button class="fixed bottom-12 right-12 w-20 h-20 bg-primary text-on-primary rounded-2xl flex items-center justify-center shadow-2xl shadow-primary/40 hover:scale-110 active:scale-90 transition-all z-50">
+<span class="material-symbols-outlined text-[40px]">draw</span>
+</button>
+</div>
+<!-- Modal Concept remains structural but styling update -->
+<div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] hidden items-center justify-center p-8" id="modal-overlay">
+<div class="paper-card w-full max-w-xl rounded-2xl shadow-2xl p-10 rotate-0">
+<div class="flex justify-between items-center mb-8">
+<h3 class="font-headline-md text-headline-md font-bold">New Scribble</h3>
+<button class="p-3 hover:bg-slate-100 rounded-full active-scale" onclick="document.getElementById('modal-overlay').classList.add('hidden')"><span class="material-symbols-outlined text-[28px]">close</span></button>
+</div>
+<div class="border-b-2 border-primary/20 pb-2 mb-10">
+<input class="w-full text-3xl font-handwriting border-none focus:ring-0 p-0 bg-transparent outline-none placeholder:text-slate-300" placeholder="Write something..." type="text"/>
+</div>
+<div class="flex gap-4 flex-wrap mb-10">
+<button class="px-5 py-2.5 bg-slate-100 rounded-xl text-lg font-handwriting-alt flex items-center gap-3">
+<span class="material-symbols-outlined text-[20px]">calendar_today</span> Today
+            </button>
+<button class="px-5 py-2.5 bg-slate-100 rounded-xl text-lg font-handwriting-alt flex items-center gap-3">
+<span class="material-symbols-outlined text-[20px]">flag</span> Priority
+            </button>
+</div>
+<div class="flex justify-end gap-6">
+<button class="px-8 py-3 text-slate-500 font-title-md rounded-xl hover:bg-slate-50 transition-colors" onclick="document.getElementById('modal-overlay').classList.add('hidden')">Discard</button>
+<button class="px-10 py-3 bg-primary text-on-primary font-bold font-title-md rounded-xl shadow-lg shadow-primary/30">Save Ink</button>
+</div>
+</div>
+</div>
+<script>
+    const toggleBtn = document.getElementById('toggle-completed');
+    const completedList = document.getElementById('completed-list');
+    const overlay = document.getElementById('modal-overlay');
+    const fab = document.querySelector('.fixed.bottom-12');
+
+    toggleBtn.addEventListener('click', () => {
+        const isHidden = completedList.classList.contains('hidden');
+        if(isHidden) {
+            completedList.classList.remove('hidden');
+            toggleBtn.querySelector('.material-symbols-outlined').style.transform = 'rotate(0deg)';
+        } else {
+            completedList.classList.add('hidden');
+            toggleBtn.querySelector('.material-symbols-outlined').style.transform = 'rotate(-90deg)';
+        }
+    });
+
+    fab.addEventListener('click', () => {
+        overlay.classList.remove('hidden');
+        overlay.classList.add('flex');
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') overlay.classList.add('hidden');
+    });
+</script>
+</body></html>

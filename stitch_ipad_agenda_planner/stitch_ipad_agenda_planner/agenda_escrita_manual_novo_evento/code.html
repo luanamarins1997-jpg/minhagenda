@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Agenda - Create New Event (Handwriting Mode)</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Adding a handwriting-style font for placeholders/notes -->
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .category-strip {
+            width: 4px;
+            height: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #003ec7 !important;
+            box-shadow: 0 0 0 1px #003ec7;
+        }
+        .breathe-container {
+            padding: 32px;
+        }
+        /* Ambient Elevation Level 2 */
+        .modal-elevation {
+            box-shadow: 0px 12px 32px rgba(0,0,0,0.12);
+        }
+
+        /* Paper-like handwriting zones */
+        .handwriting-zone {
+            background-color: #fcfdff;
+            background-image: 
+                linear-gradient(#e2e7ff 1px, transparent 1px);
+            background-size: 100% 2rem;
+            line-height: 2rem;
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l5 5"></path><path d="M9.5 14.5L16 8"></path></svg>'), auto;
+        }
+        
+        .handwriting-grid {
+            background-color: #fcfdff;
+            background-image: 
+                linear-gradient(#e2e7ff 1px, transparent 1px),
+                linear-gradient(90deg, #e2e7ff 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .handwriting-font {
+            font-family: 'Caveat', cursive;
+        }
+
+        /* Stylized Pencil Cursor for Canvas Feel */
+        .pencil-active {
+            cursor: crosshair;
+        }
+    </style>
+<script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {"surface-tint": "#b7006f", "on-primary-fixed-variant": "#8c0054", "secondary-container": "#dfe3e8", "on-background": "#1b1c1d", "primary-fixed-dim": "#ffb0ce", "on-surface-variant": "#424751", "on-error": "#ffffff", "on-tertiary-fixed": "#012200", error: "#ba1a1a", "surface-bright": "#faf9fa", "tertiary-container": "#278917", "on-tertiary": "#ffffff", "outline-variant": "#c2c6d2", "on-primary": "#ffffff", "on-secondary-fixed-variant": "#42474b", background: "#faf9fa", "inverse-primary": "#ffb0ce", "surface-container-high": "#e9e8e9", "on-primary-container": "#120007", "on-error-container": "#93000a", "on-secondary-fixed": "#171c20", "inverse-on-surface": "#f2f0f1", outline: "#727782", "on-secondary-container": "#606569", "surface-container-low": "#f5f3f4", surface: "#faf9fa", "inverse-surface": "#303031", "error-container": "#ffdad6", "secondary-fixed": "#dfe3e8", "surface-dim": "#dbdadb", "surface-variant": "#e3e2e3", secondary: "#5a5f63", tertiary: "#0b6e00", "on-surface": "#1b1c1d", "tertiary-fixed": "#95fa7c", "primary-container": "#e3078b", "surface-container-highest": "#e3e2e3", "surface-container": "#efedee", "on-tertiary-fixed-variant": "#065300", "on-primary-fixed": "#3e0022", "on-secondary": "#ffffff", "on-tertiary-container": "#000700", "surface-container-lowest": "#ffffff", "primary-fixed": "#ffd9e5", primary: "#b7006f", "secondary-fixed-dim": "#c2c7cc", "tertiary-fixed-dim": "#7add63"}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}, spacing: {unit: "8px", stack_gap: "12px", sidebar_width: "280px", gutter: "24px", margin_tablet: "32px", card_padding: "16px"}, fontFamily: {"title-md": ["Inter"], "body-md": ["Inter"], "label-sm": ["Inter"], "headline-md": ["Inter"], "display-date": ["Inter"], "title-lg": ["Inter"], "headline-lg": ["Inter"], "body-lg": ["Inter"], "label-caps": ["Inter"], headline: ["Inter"], display: ["Inter"], body: ["Inter"], label: ["Inter"]}, fontSize: {"title-md": ["16px", {lineHeight: "24px", fontWeight: "600"}], "body-md": ["14px", {lineHeight: "20px", fontWeight: "400"}], "label-sm": ["12px", {lineHeight: "16px", fontWeight: "500"}], "headline-md": ["24px", {lineHeight: "32px", fontWeight: "600"}], "display-date": ["48px", {lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700"}], "title-lg": ["20px", {lineHeight: "28px", fontWeight: "600"}], "headline-lg": ["32px", {lineHeight: "40px", letterSpacing: "-0.01em", fontWeight: "600"}], "body-lg": ["16px", {lineHeight: "24px", fontWeight: "400"}], "label-caps": ["12px", {lineHeight: "16px", letterSpacing: "0.05em", fontWeight: "700"}]}}}};</script>
+</head>
+<body class="bg-surface text-on-surface font-body-md min-h-screen overflow-hidden flex">
+<!-- Sidebar -->
+<aside class="fixed left-0 top-0 h-full w-[280px] bg-surface-container-low backdrop-blur-xl flex flex-col p-unit gap-stack_gap z-20">
+<div class="px-4 py-6">
+<h1 class="font-headline-md text-headline-md font-bold text-primary">Agenda</h1>
+<p class="text-on-surface-variant opacity-70">Elevated Planner</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-secondary hover:bg-surface-container-high transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="font-title-md text-title-md handwriting-font text-xl">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-secondary hover:bg-surface-container-high transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">task_alt</span>
+<span class="font-title-md text-title-md handwriting-font text-xl">Tasks</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-secondary hover:bg-surface-container-high transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-title-md text-title-md">Settings</span>
+</a>
+</nav>
+<!-- Handwriting Mode Indicator -->
+<div class="px-4 py-4 m-2 bg-primary-container/20 rounded-xl border border-primary/20">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">edit_note</span>
+<span class="text-label-sm font-bold text-primary uppercase tracking-wider">Pen Mode Active</span>
+</div>
+<div class="flex justify-between items-center bg-white/50 p-2 rounded-lg">
+<div class="flex gap-2">
+<div class="w-6 h-6 rounded-full bg-black"></div>
+<div class="w-6 h-6 rounded-full bg-primary"></div>
+</div>
+<span class="material-symbols-outlined text-outline text-sm">gesture</span>
+</div>
+</div>
+<div class="mt-auto p-4 flex items-center gap-3 border-t border-outline-variant/30">
+<img alt="User profile avatar" class="w-10 h-10 rounded-full bg-secondary-container object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDGclinE7kfBtWxplCt2t4iOwLIWUiGfwqaT_2BuZRjFf02woCHksj4op1MGGd9Al4Y0YZ3oUPyffJhiWs9zPHK2NIVFUvxL5QOGCqDMZ1aPmOzi-j24oXu2mKjp6KTskG_duNexcVLCeZKN2oITNRMDZ4f7cJ5DOQb1Rw4AGb2uXysZUV0bSup14KtB1PwW_5UxzZ6fr0g86cNUrFlQfHAWEfXLrCB__u41wDWMNJHiJ-RK0ABeBVH4Am4XiiYoBT19WftLZiph_g-"/>
+<div class="flex flex-col">
+<span class="font-title-md text-title-md leading-tight">Alex Rivera</span>
+<span class="text-label-sm text-label-sm text-on-surface-variant">Standard Plan</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 ml-[280px] h-screen relative bg-surface-bright flex items-center justify-center p-margin_tablet">
+<!-- Backdrop Blur (Context) -->
+<div class="absolute inset-0 z-0 opacity-40 pointer-events-none overflow-hidden">
+<div class="grid grid-cols-12 gap-4 p-8 blur-sm">
+<!-- Mock Background Calendar Grid with 'handwritten' entries -->
+<div class="col-span-12 h-20 bg-white rounded-lg shadow-sm"></div>
+<div class="col-span-4 h-64 bg-white rounded-lg shadow-sm border-l-4 border-primary p-4">
+<p class="handwriting-font text-2xl text-primary-fixed-dim opacity-40">Client Meeting</p>
+</div>
+<div class="col-span-8 h-64 bg-white rounded-lg shadow-sm border-l-4 border-tertiary p-4">
+<p class="handwriting-font text-2xl text-tertiary-fixed-dim opacity-40">Design Sprint Prep</p>
+</div>
+<div class="col-span-12 h-32 bg-white rounded-lg shadow-sm"></div>
+</div>
+</div>
+<!-- Create Event Form (Handwriting Optimized) -->
+<div class="relative z-10 w-full max-w-[720px] bg-surface-container-lowest rounded-xl modal-elevation flex flex-col overflow-hidden animate-in fade-in zoom-in duration-300">
+<!-- Modal Header -->
+<header class="h-20 bg-surface/80 backdrop-blur-md flex justify-between items-center px-8 border-b border-outline-variant/20">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">edit</span>
+<h2 class="font-headline-md text-headline-md font-bold text-on-surface">Novo Evento</h2>
+</div>
+<button class="p-2 hover:bg-surface-container-high rounded-full transition-colors active:scale-95" onclick="window.history.back()" type="button">
+<span class="material-symbols-outlined text-on-surface-variant">close</span>
+</button>
+</header>
+<!-- Form Content -->
+<form class="flex-1 overflow-y-auto p-8 space-y-8" id="event-form">
+<!-- Title Field - Handwriting Style -->
+<div class="space-y-2">
+<label class="font-label-caps text-label-caps text-on-surface-variant uppercase" for="title">Title</label>
+<div class="relative handwriting-zone rounded-lg border border-outline-variant/40 hover:border-primary transition-colors overflow-hidden h-20 flex items-center px-4">
+<input class="w-full bg-transparent border-none focus:ring-0 font-title-lg text-title-lg handwriting-font text-3xl placeholder:text-outline/30" id="title" placeholder="Write title here..." type="text"/>
+</div>
+</div>
+<!-- Date & Time Grid (Standard Tappable) -->
+<div class="grid grid-cols-2 gap-gutter">
+<div class="space-y-2">
+<label class="font-label-caps text-label-caps text-on-surface-variant uppercase" for="start-date">Start Date</label>
+<div class="relative">
+<span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-primary">calendar_today</span>
+<input class="w-full h-14 bg-surface-container-low border-outline-variant rounded-lg pl-12 pr-4 font-body-lg text-body-lg text-on-surface transition-all" id="start-date" type="date" value="2023-09-12"/>
+</div>
+</div>
+<div class="space-y-2">
+<label class="font-label-caps text-label-caps text-on-surface-variant uppercase" for="start-time">Start Time</label>
+<div class="relative">
+<span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-primary">schedule</span>
+<input class="w-full h-14 bg-surface-container-low border-outline-variant rounded-lg pl-12 pr-4 font-body-lg text-body-lg text-on-surface transition-all" id="start-time" type="time" value="09:00"/>
+</div>
+</div>
+</div>
+<!-- Location Field - Handwriting Style -->
+<div class="space-y-2">
+<label class="font-label-caps text-label-caps text-on-surface-variant uppercase" for="location">Location</label>
+<div class="relative handwriting-zone rounded-lg border border-outline-variant/40 flex items-center h-16">
+<span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-tertiary">location_on</span>
+<input class="w-full bg-transparent border-none focus:ring-0 pl-12 pr-4 font-body-lg text-body-lg handwriting-font text-2xl placeholder:text-outline/30" id="location" placeholder="Write location here..." type="text"/>
+</div>
+</div>
+<!-- Description Field - Ruled Paper Style -->
+<div class="space-y-2">
+<label class="font-label-caps text-label-caps text-on-surface-variant uppercase" for="description">Description</label>
+<div class="handwriting-zone rounded-lg border border-outline-variant/40 min-h-[200px] p-2">
+<textarea class="w-full bg-transparent border-none focus:ring-0 p-4 font-body-lg text-body-lg handwriting-font text-2xl placeholder:text-outline/30 leading-[2rem] resize-none overflow-hidden" id="description" placeholder="Write notes or draw here..." rows="6"></textarea>
+</div>
+</div>
+<!-- Reminders & Category Row (High Contrast Tappable) -->
+<div class="grid grid-cols-2 gap-gutter">
+<div class="space-y-2">
+<label class="font-label-caps text-label-caps text-on-surface-variant uppercase" for="reminder">Reminders</label>
+<select class="w-full h-14 bg-surface-container-low border-outline-variant rounded-lg px-4 font-body-lg text-body-lg text-on-surface appearance-none transition-all cursor-pointer" id="reminder">
+<option>At time of event</option>
+<option>15 minutes before</option>
+<option>1 hour before</option>
+<option>1 day before</option>
+</select>
+</div>
+<div class="space-y-2">
+<label class="font-label-caps text-label-caps text-on-surface-variant uppercase" for="category">Category</label>
+<div class="flex gap-4 h-14 items-center">
+<button class="w-12 h-12 rounded-full bg-primary ring-2 ring-primary ring-offset-4 flex items-center justify-center text-white" type="button">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check</span>
+</button>
+<button class="w-10 h-10 rounded-full bg-tertiary hover:scale-110 transition-transform shadow-sm" type="button"></button>
+<button class="w-10 h-10 rounded-full bg-error hover:scale-110 transition-transform shadow-sm" type="button"></button>
+<button class="w-10 h-10 rounded-full bg-secondary hover:scale-110 transition-transform shadow-sm" type="button"></button>
+</div>
+</div>
+</div>
+</form>
+<!-- Modal Footer -->
+<footer class="h-24 px-8 flex items-center justify-between border-t border-outline-variant/20 bg-surface-container-lowest">
+<button class="px-8 py-3 rounded-lg font-title-md text-title-md text-secondary hover:bg-surface-container-high transition-all active:scale-95" type="button">
+                    Cancel
+                </button>
+<div class="flex gap-4 items-center">
+<div class="flex items-center gap-2 text-on-surface-variant mr-4 opacity-60">
+<span class="material-symbols-outlined text-sm">auto_fix</span>
+<span class="text-label-sm handwriting-font text-lg">Auto-convert ink</span>
+</div>
+<button class="px-10 py-3 rounded-lg font-title-md text-title-md bg-primary text-on-primary hover:opacity-90 transition-all active:scale-95 shadow-md flex items-center gap-2" form="event-form" type="submit">
+<span class="material-symbols-outlined">save</span>
+    Save Event
+</button>
+</div>
+</footer>
+</div>
+</main>
+<script>
+        // Micro-interactions for category selection - enhanced for pen usage
+        const categoryButtons = document.querySelectorAll('button[type="button"].rounded-full:not(.p-2)');
+        categoryButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                categoryButtons.forEach(b => {
+                    b.innerHTML = '';
+                    b.classList.remove('ring-2', 'ring-offset-4', 'w-12', 'h-12');
+                    b.classList.add('w-10', 'h-10');
+                });
+                btn.classList.add('ring-2', 'ring-offset-4', 'w-12', 'h-12');
+                btn.classList.remove('w-10', 'h-10');
+                btn.innerHTML = '<span class="material-symbols-outlined text-white" style="font-variation-settings: \'FILL\' 1;">check</span>';
+                
+                // Determine ring color based on button bg
+                if (btn.classList.contains('bg-primary')) btn.classList.add('ring-primary');
+                if (btn.classList.contains('bg-tertiary')) btn.classList.add('ring-tertiary');
+                if (btn.classList.contains('bg-error')) btn.classList.add('ring-error');
+                if (btn.classList.contains('bg-secondary')) btn.classList.add('ring-secondary');
+            });
+        });
+
+        // Simple form validation micro-interaction
+        const form = document.getElementById('event-form');
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const titleInput = document.getElementById('title');
+            if(!titleInput.value) {
+                titleInput.parentElement.classList.replace('border-outline-variant/40', 'border-error');
+                titleInput.focus();
+                return;
+            }
+            
+            // Success State Logic
+            const saveBtn = e.target.querySelector('button[type="submit"]');
+            saveBtn.innerHTML = '<span class="material-symbols-outlined animate-spin mr-2">progress_activity</span> Processing Ink...';
+            saveBtn.disabled = true;
+            
+            setTimeout(() => {
+                saveBtn.innerHTML = 'Saved';
+                saveBtn.classList.replace('bg-primary', 'bg-green-600');
+                setTimeout(() => {
+                    alert('Event processed and saved to your calendar!');
+                    window.location.reload();
+                }, 800);
+            }, 1500);
+        });
+    </script>
+</body></html>

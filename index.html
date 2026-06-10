@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html class="light" lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>Minha Agenda</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Gochi+Hand&family=Patrick+Hand&family=Caveat:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div id="app"></div>
+
+<style>
+  body { font-family: 'Inter', sans-serif; background-color: #faf9fa; margin: 0; }
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+    background-color: #E2E8F0;
+  }
+  .calendar-day {
+    background-color: white;
+    min-height: 100px;
+    padding: 6px;
+    transition: background-color 0.2s;
+    background-image: linear-gradient(#f1f5f9 1px, transparent 1px);
+    background-size: 100% 24px;
+    cursor: pointer;
+    overflow: hidden;
+  }
+  .calendar-day:hover { background-color: #F8FAFC; }
+  .calendar-day.today { background-color: #fdf2f8; }
+  .calendar-day.other-month { opacity: 0.35; background-color: #f1f5f9; }
+  .event-chip-handwritten {
+    font-family: 'Patrick Hand', cursive;
+    padding: 0px 4px;
+    margin-bottom: 2px;
+    font-size: 12px;
+    line-height: 1.3;
+    transform: rotate(-0.5deg);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-radius: 2px;
+  }
+  .sidebar-paper {
+    background-image:
+      linear-gradient(90deg, transparent 39px, #abced4 39px, #abced4 41px, transparent 41px),
+      linear-gradient(#e1e1e1 0.1em, transparent 0.1em);
+    background-size: 100% 1.5rem;
+    background-color: #ffffff;
+  }
+  .handwritten-text { font-family: 'Patrick Hand', cursive; }
+  .handwritten-title { font-family: 'Gochi Hand', cursive; }
+  .scribble-border {
+    border-bottom: 2px solid #333;
+    border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
+  }
+  .handwriting-zone {
+    background-color: #fcfdff;
+    background-image: linear-gradient(#e2e7ff 1px, transparent 1px);
+    background-size: 100% 2rem;
+    line-height: 2rem;
+  }
+  .paper-card {
+    background-image: linear-gradient(#e1e5f0 1px, transparent 1px);
+    background-size: 100% 2rem;
+    background-color: #fff;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.05);
+    border: 1px solid #e2e8f0;
+    transform: rotate(-0.5deg);
+  }
+  .paper-card:nth-child(even) { transform: rotate(0.5deg); background-color: #fdfdfd; }
+  .hand-drawn-checkbox {
+    border: 2px solid #64748B;
+    border-radius: 4px;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .hand-drawn-checkbox.checked::after {
+    content: '✓';
+    font-family: 'Gochi Hand', cursive;
+    font-size: 22px;
+    color: #b7006f;
+    line-height: 1;
+  }
+  .view { display: none; }
+  .view.active { display: flex; }
+  .fade-in { animation: fadeIn 0.2s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  #auth-screen { min-height: 100vh; }
+  .modal-overlay { background-color: rgba(0,0,0,0.4); backdrop-filter: blur(4px); }
+  .nav-item.active { background-color: #dfe3e8; color: #1b1c1d; border-radius: 0.5rem; }
+  #toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: #1b1c1d; color: white; padding: 12px 24px; border-radius: 12px;
+    font-size: 14px; z-index: 999; opacity: 0; transition: opacity 0.3s;
+    pointer-events: none;
+  }
+  #toast.show { opacity: 1; }
+  @media (max-width: 1024px) {
+    .sidebar { width: 72px !important; }
+    .sidebar .nav-label, .sidebar .app-title, .sidebar .app-subtitle, .sidebar .user-info { display: none; }
+    .sidebar .nav-item { justify-content: center; padding: 12px; }
+    .sidebar .create-btn span { display: none; }
+    .sidebar .user-section { display: none; }
+    main { margin-left: 72px !important; }
+  }
+</style>
+
+<script>
+const SUPABASE_URL = 'https://pftjojkgzgthayfabhhf.supabase.co'
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmdGpvamtnemd0aGF5ZmFiaGhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNDE5MjcsImV4cCI6MjA5NjYxNzkyN30.CfqAZjKmiDexilbRMMRWl54-UZPVGz9Abu3tXpaQ0y4'
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+let currentUser = null
+let currentMonth = new Date().getMonth()
+let currentYear = new Date().getFullYear()
+let events = []
+let tasks = []
+
+function $(id) { return document.getElementById(id) }
+
+function toast(msg) {
+  const t = $('toast')
+  t.textContent = msg; t.classList.add('show')
+  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2500)
+}
+
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'))
+  $(id).classList.add('active')
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'))
+  const navMap = { 'calendar-view': 'nav-dashboard', 'event-view': 'nav-event', 'tasks-view': 'nav-tasks' }
+  const navId = navMap[id]
+  if (navId) $(navId).classList.add('active')
+}
+
+// ===================== AUTH =====================
+function renderAuth() {
+  $('app').innerHTML = `
+    <div id="auth-screen" class="flex items-center justify-center bg-[#faf9fa]" style="min-height:100vh">
+      <div class="w-full max-w-md p-8">
+        <div class="text-center mb-8">
+          <h1 class="font-headline-md text-4xl font-bold text-[#b7006f] handwritten-title">Minha Agenda</h1>
+          <p class="text-[#424751] mt-2 handwritten-text text-xl">Elevated Planner</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border border-[#c2c6d2]/30 p-8">
+          <div id="auth-form">
+            <h2 class="text-xl font-bold text-[#1b1c1d] mb-6" id="auth-title">Entrar</h2>
+            <div class="space-y-4">
+              <div>
+                <label class="text-sm font-medium text-[#424751]">Email</label>
+                <input id="auth-email" type="email" class="w-full h-12 bg-[#f5f3f4] border border-[#c2c6d2] rounded-lg px-4 text-[#1b1c1d] focus:ring-2 focus:ring-[#b7006f] focus:border-transparent" placeholder="seu@email.com">
+              </div>
+              <div>
+                <label class="text-sm font-medium text-[#424751]">Senha</label>
+                <input id="auth-password" type="password" class="w-full h-12 bg-[#f5f3f4] border border-[#c2c6d2] rounded-lg px-4 text-[#1b1c1d] focus:ring-2 focus:ring-[#b7006f] focus:border-transparent" placeholder="••••••••">
+              </div>
+              <button id="auth-btn" class="w-full h-12 bg-[#b7006f] text-white rounded-lg font-semibold hover:opacity-90 transition-all active:scale-[0.98] shadow-md">Entrar</button>
+              <p class="text-sm text-center text-[#727782]">
+                <span id="auth-toggle-text">Não tem conta?</span>
+                <button id="auth-toggle" class="text-[#b7006f] font-semibold hover:underline ml-1">Criar conta</button>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>`
+
+  let isLogin = true
+  const toggle = () => {
+    isLogin = !isLogin
+    $('auth-title').textContent = isLogin ? 'Entrar' : 'Criar Conta'
+    $('auth-btn').textContent = isLogin ? 'Entrar' : 'Criar Conta'
+    $('auth-toggle-text').textContent = isLogin ? 'Não tem conta?' : 'Já tem conta?'
+    $('auth-toggle').textContent = isLogin ? 'Criar conta' : 'Entrar'
+  }
+  $('auth-toggle').onclick = toggle
+
+  $('auth-btn').onclick = async () => {
+    const email = $('auth-email').value.trim()
+    const password = $('auth-password').value.trim()
+    if (!email || !password) { toast('Preencha email e senha'); return }
+    $('auth-btn').disabled = true; $('auth-btn').textContent = 'Aguarde...'
+    try {
+      let result
+      if (isLogin) {
+        result = await supabase.auth.signInWithPassword({ email, password })
+      } else {
+        result = await supabase.auth.signUp({ email, password })
+      }
+      if (result.error) { toast(result.error.message); $('auth-btn').disabled = false; $('auth-btn').textContent = isLogin ? 'Entrar' : 'Criar Conta'; return }
+      if (!isLogin) { toast('Conta criada! Verifique seu email.'); isLogin = true; toggle() }
+    } catch(e) { toast('Erro de conexão'); }
+    $('auth-btn').disabled = false; $('auth-btn').textContent = isLogin ? 'Entrar' : 'Criar Conta'
+  }
+}
+
+// ===================== MAIN APP =====================
+function renderApp(user) {
+  currentUser = user
+  $('app').innerHTML = `
+    <div id="app-screen" class="flex h-screen overflow-hidden bg-[#faf9fa]">
+      <!-- Sidebar -->
+      <aside class="sidebar fixed left-0 top-0 h-full w-[280px] bg-white backdrop-blur-xl flex flex-col p-4 gap-3 border-r border-[#c2c6d2]/30 z-50" style="transition: width 0.2s">
+        <div class="px-4 py-4">
+          <h1 class="app-title text-2xl font-bold text-[#b7006f] handwritten-title">Agenda</h1>
+          <p class="app-subtitle text-xs text-[#424751] opacity-70">Elevated Planner</p>
+        </div>
+        <button id="nav-event" class="nav-item create-btn flex items-center gap-3 mx-2 px-4 py-3 bg-[#b7006f] text-white rounded-xl font-semibold hover:opacity-90 active:scale-95 transition-all shadow-md">
+          <span class="material-symbols-outlined">add</span>
+          <span>Novo Evento</span>
+        </button>
+        <nav class="flex flex-col gap-1 px-2 mt-2">
+          <a id="nav-dashboard" class="nav-item flex items-center gap-3 px-4 py-3 text-[#5a5f63] hover:bg-[#e9e8e9] rounded-lg transition-all cursor-pointer active">
+            <span class="material-symbols-outlined" style="font-variation-settings:'FILL'1">calendar_today</span>
+            <span class="nav-label">Dashboard</span>
+          </a>
+          <a id="nav-tasks" class="nav-item flex items-center gap-3 px-4 py-3 text-[#5a5f63] hover:bg-[#e9e8e9] rounded-lg transition-all cursor-pointer">
+            <span class="material-symbols-outlined">task_alt</span>
+            <span class="nav-label">Tarefas</span>
+          </a>
+          <a id="nav-settings" class="nav-item flex items-center gap-3 px-4 py-3 text-[#5a5f63] hover:bg-[#e9e8e9] rounded-lg transition-all cursor-pointer">
+            <span class="material-symbols-outlined">settings</span>
+            <span class="nav-label">Config</span>
+          </a>
+        </nav>
+        <div class="user-section mt-auto p-4 flex items-center gap-3 border-t border-[#c2c6d2]/30">
+          <div class="w-10 h-10 rounded-full bg-[#b7006f] flex items-center justify-center text-white font-bold text-lg">${user.email[0].toUpperCase()}</div>
+          <div class="user-info">
+            <p class="text-sm font-semibold text-[#1b1c1d]">${user.email}</p>
+            <p class="text-xs text-[#424751]">Plano Grátis</p>
+          </div>
+          <button id="btn-logout" class="ml-auto text-[#727782] hover:text-[#ba1a1a] transition-colors" title="Sair">
+            <span class="material-symbols-outlined">logout</span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="flex-1 ml-[280px] h-screen flex flex-col overflow-hidden" style="transition: margin-left 0.2s">
+        <!-- Top Bar -->
+        <header class="h-16 bg-white/80 backdrop-blur-md flex items-center justify-between px-6 border-b border-[#c2c6d2]/20 flex-shrink-0">
+          <h2 id="view-title" class="text-xl font-bold text-[#1b1c1d]">Dashboard</h2>
+          <div class="flex items-center gap-4">
+            <div class="relative hidden md:block">
+              <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#727782]" style="font-size:20px">search</span>
+              <input id="global-search" class="bg-[#f5f3f4] border-none rounded-full py-2 pl-10 pr-4 w-48 text-sm focus:ring-2 focus:ring-[#b7006f]" placeholder="Buscar...">
+            </div>
+            <span id="user-email-display" class="text-sm text-[#727782] hidden md:inline">${user.email}</span>
+          </div>
+        </header>
+
+        <!-- Views -->
+        <div class="flex-1 overflow-hidden">
+          <!-- CALENDAR VIEW -->
+          <div id="calendar-view" class="view active flex-1 h-full flex flex-col">
+            <div class="flex-1 flex overflow-hidden p-4 gap-4" style="height:calc(100% - 0px)">
+              <section class="flex-1 bg-white rounded-xl shadow-sm border border-[#c2c6d2]/30 overflow-hidden flex flex-col">
+                <div class="flex items-center justify-between px-6 py-3 border-b border-[#c2c6d2]/20">
+                  <div class="flex items-center gap-3">
+                    <button id="prev-month" class="p-2 hover:bg-[#f5f3f4] rounded-full transition-colors">
+                      <span class="material-symbols-outlined">chevron_left</span>
+                    </button>
+                    <h3 id="month-title" class="text-lg font-bold text-[#1b1c1d] min-w-[200px] text-center"></h3>
+                    <button id="next-month" class="p-2 hover:bg-[#f5f3f4] rounded-full transition-colors">
+                      <span class="material-symbols-outlined">chevron_right</span>
+                    </button>
+                  </div>
+                  <button id="today-btn" class="text-sm px-3 py-1.5 bg-[#f5f3f4] rounded-lg hover:bg-[#e9e8e9] transition-colors font-medium">Hoje</button>
+                </div>
+                <div class="grid grid-cols-7 border-b border-[#c2c6d2]/20 bg-[#faf9fa]">
+                  <div class="py-2 text-center text-xs font-semibold text-[#727782] uppercase tracking-wider">Dom</div>
+                  <div class="py-2 text-center text-xs font-semibold text-[#727782] uppercase tracking-wider">Seg</div>
+                  <div class="py-2 text-center text-xs font-semibold text-[#727782] uppercase tracking-wider">Ter</div>
+                  <div class="py-2 text-center text-xs font-semibold text-[#727782] uppercase tracking-wider">Qua</div>
+                  <div class="py-2 text-center text-xs font-semibold text-[#727782] uppercase tracking-wider">Qui</div>
+                  <div class="py-2 text-center text-xs font-semibold text-[#727782] uppercase tracking-wider">Sex</div>
+                  <div class="py-2 text-center text-xs font-semibold text-[#727782] uppercase tracking-wider">Sáb</div>
+                </div>
+                <div id="calendar-grid" class="flex-1 calendar-grid overflow-y-auto"></div>
+              </section>
+              <aside id="today-agenda" class="w-[300px] flex-shrink-0 bg-white rounded-xl shadow-sm border border-[#c2c6d2]/30 flex flex-col sidebar-paper overflow-hidden">
+                <div class="p-4 border-b border-[#c2c6d2]/20 bg-white/80">
+                  <h3 class="font-semibold text-[#1b1c1d]">Agenda de Hoje</h3>
+                  <p id="today-date" class="handwritten-text text-[#424751] text-sm"></p>
+                </div>
+                <div id="today-events" class="flex-1 p-4 space-y-4 overflow-y-auto">
+                  <p class="text-[#727782] text-sm handwritten-text text-lg">Nenhum evento hoje</p>
+                </div>
+              </aside>
+            </div>
+          </div>
+
+          <!-- EVENT VIEW -->
+          <div id="event-view" class="view flex-1 h-full p-6 overflow-y-auto">
+            <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-sm border border-[#c2c6d2]/30 p-8">
+              <h2 class="text-2xl font-bold text-[#1b1c1d] mb-6 handwritten-title">Novo Evento</h2>
+              <form id="event-form" class="space-y-6">
+                <div>
+                  <label class="text-sm font-medium text-[#424751] uppercase tracking-wider">Título</label>
+                  <div class="handwriting-zone rounded-lg border border-[#c2c6d2]/40 mt-1 h-14 flex items-center px-4">
+                    <input id="ev-title" class="w-full bg-transparent border-none focus:ring-0 text-xl handwritten-text placeholder:text-[#c2c6d2]" placeholder="Escreva o título aqui..." required>
+                  </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="text-sm font-medium text-[#424751] uppercase tracking-wider">Data</label>
+                    <div class="relative mt-1">
+                      <span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#b7006f]" style="font-size:20px">calendar_today</span>
+                      <input id="ev-date" type="date" class="w-full h-12 bg-[#f5f3f4] border border-[#c2c6d2] rounded-lg pl-10 pr-3 text-sm focus:ring-2 focus:ring-[#b7006f]">
+                    </div>
+                  </div>
+                  <div>
+                    <label class="text-sm font-medium text-[#424751] uppercase tracking-wider">Horário</label>
+                    <div class="relative mt-1">
+                      <span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#b7006f]" style="font-size:20px">schedule</span>
+                      <input id="ev-time" type="time" class="w-full h-12 bg-[#f5f3f4] border border-[#c2c6d2] rounded-lg pl-10 pr-3 text-sm focus:ring-2 focus:ring-[#b7006f]">
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label class="text-sm font-medium text-[#424751] uppercase tracking-wider">Local</label>
+                  <div class="handwriting-zone rounded-lg border border-[#c2c6d2]/40 mt-1 h-12 flex items-center px-4">
+                    <input id="ev-location" class="w-full bg-transparent border-none focus:ring-0 text-lg handwritten-text placeholder:text-[#c2c6d2]" placeholder="Onde vai ser?">
+                  </div>
+                </div>
+                <div>
+                  <label class="text-sm font-medium text-[#424751] uppercase tracking-wider">Descrição</label>
+                  <div class="handwriting-zone rounded-lg border border-[#c2c6d2]/40 mt-1 p-2 min-h-[120px]">
+                    <textarea id="ev-desc" class="w-full bg-transparent border-none focus:ring-0 p-2 text-base handwritten-text placeholder:text-[#c2c6d2] leading-[2rem] resize-none" placeholder="Notas ou descrição..." rows="4"></textarea>
+                  </div>
+                </div>
+                <div class="flex items-center gap-4">
+                  <div class="flex-1">
+                    <label class="text-sm font-medium text-[#424751] uppercase tracking-wider">Lembrete</label>
+                    <select id="ev-reminder" class="w-full h-12 bg-[#f5f3f4] border border-[#c2c6d2] rounded-lg px-3 text-sm mt-1 focus:ring-2 focus:ring-[#b7006f]">
+                      <option value="Na hora">Na hora do evento</option>
+                      <option value="15 min">15 minutos antes</option>
+                      <option value="1 hora">1 hora antes</option>
+                      <option value="1 dia">1 dia antes</option>
+                    </select>
+                  </div>
+                  <div class="flex-1">
+                    <label class="text-sm font-medium text-[#424751] uppercase tracking-wider">Categoria</label>
+                    <div class="flex gap-3 mt-3">
+                      <button type="button" class="cat-btn w-10 h-10 rounded-full bg-[#b7006f] ring-2 ring-offset-2 ring-[#b7006f] flex items-center justify-center text-white" data-cat="default">
+                        <span class="material-symbols-outlined" style="font-size:18px">check</span>
+                      </button>
+                      <button type="button" class="cat-btn w-10 h-10 rounded-full bg-[#0b6e00] hover:scale-110 transition-transform" data-cat="pessoal"></button>
+                      <button type="button" class="cat-btn w-10 h-10 rounded-full bg-[#ba1a1a] hover:scale-110 transition-transform" data-cat="trabalho"></button>
+                      <button type="button" class="cat-btn w-10 h-10 rounded-full bg-[#5a5f63] hover:scale-110 transition-transform" data-cat="saude"></button>
+                    </div>
+                  </div>
+                </div>
+                <div class="flex justify-end gap-3 pt-4 border-t border-[#c2c6d2]/20">
+                  <button type="button" id="ev-cancel" class="px-6 py-2.5 rounded-lg text-[#5a5f63] hover:bg-[#f5f3f4] transition-all font-medium">Cancelar</button>
+                  <button type="submit" class="px-8 py-2.5 bg-[#b7006f] text-white rounded-lg font-semibold hover:opacity-90 transition-all active:scale-[0.98] shadow-md flex items-center gap-2">
+                    <span class="material-symbols-outlined" style="font-size:18px">save</span>
+                    Salvar Evento
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- TASKS VIEW -->
+          <div id="tasks-view" class="view flex-1 h-full p-6 overflow-y-auto">
+            <div class="max-w-3xl mx-auto">
+              <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-[#1b1c1d] handwritten-title">Tarefas</h2>
+                <button id="add-task-btn" class="px-5 py-2.5 bg-[#b7006f] text-white rounded-lg font-semibold hover:opacity-90 transition-all active:scale-[0.98] shadow-md flex items-center gap-2">
+                  <span class="material-symbols-outlined" style="font-size:18px">add</span>
+                  Nova Tarefa
+                </button>
+              </div>
+              <div id="tasks-list" class="space-y-3">
+                <p class="text-[#727782] text-center py-8">Nenhuma tarefa ainda</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- SETTINGS VIEW -->
+          <div id="settings-view" class="view flex-1 h-full p-6 overflow-y-auto">
+            <div class="max-w-xl mx-auto bg-white rounded-xl shadow-sm border border-[#c2c6d2]/30 p-8">
+              <h2 class="text-2xl font-bold text-[#1b1c1d] mb-6">Configurações</h2>
+              <div class="space-y-4">
+                <div class="flex items-center justify-between p-4 bg-[#f5f3f4] rounded-lg">
+                  <div>
+                    <p class="font-medium text-[#1b1c1d]">Conta</p>
+                    <p class="text-sm text-[#727782]">${user.email}</p>
+                  </div>
+                  <button id="btn-logout2" class="px-4 py-2 bg-[#ba1a1a] text-white rounded-lg text-sm hover:opacity-90 transition-all">Sair</button>
+                </div>
+                <div class="p-4 bg-[#f5f3f4] rounded-lg">
+                  <p class="font-medium text-[#1b1c1d]">Sobre</p>
+                  <p class="text-sm text-[#727782]">Minha Agenda v1.0 • Feito com Supabase</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- Toast -->
+      <div id="toast"></div>
+    </div>`
+
+  // Setup navigation
+  $('nav-dashboard').onclick = () => { showView('calendar-view'); $('view-title').textContent = 'Dashboard' }
+  $('nav-tasks').onclick = () => { showView('tasks-view'); $('view-title').textContent = 'Tarefas'; loadTasks() }
+  $('nav-settings').onclick = () => { showView('settings-view'); $('view-title').textContent = 'Config' }
+  $('nav-event').onclick = () => { showView('event-view'); $('view-title').textContent = 'Novo Evento'; setupEventForm() }
+  $('ev-cancel').onclick = () => { showView('calendar-view'); $('view-title').textContent = 'Dashboard' }
+  for (const id of ['btn-logout', 'btn-logout2']) {
+    $(id).onclick = async () => { await supabase.auth.signOut(); init() }
+  }
+
+  // Calendar navigation
+  $('prev-month').onclick = () => { currentMonth--; if (currentMonth < 0) { currentMonth = 11; currentYear-- } renderCalendar() }
+  $('next-month').onclick = () => { currentMonth++; if (currentMonth > 11) { currentMonth = 0; currentYear++ } renderCalendar() }
+  $('today-btn').onclick = () => { const d = new Date(); currentMonth = d.getMonth(); currentYear = d.getFullYear(); renderCalendar() }
+
+  // Load data and render
+  loadEvents()
+  renderCalendar()
+  setupEventForm()
+  setupTasks()
+}
+
+// ===================== EVENTS =====================
+async function loadEvents() {
+  if (!currentUser) return
+  const { data, error } = await supabase.from('events').select('*').eq('user_id', currentUser.id).order('start_date')
+  if (!error && data) events = data
+}
+
+async function renderCalendar() {
+  if (!$('calendar-grid')) return
+  const grid = $('calendar-grid')
+  const monthNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
+  $('month-title').textContent = `${monthNames[currentMonth]} ${currentYear}`
+
+  const firstDay = new Date(currentYear, currentMonth, 1).getDay()
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate()
+  const daysInPrevMonth = new Date(currentYear, currentMonth, 0).getDate()
+  const today = new Date()
+
+  grid.innerHTML = ''
+
+  // Previous month days
+  const prevStart = daysInPrevMonth - firstDay + 1
+  for (let d = prevStart; d <= daysInPrevMonth; d++) {
+    grid.innerHTML += `<div class="calendar-day other-month"><span class="text-xs font-medium">${d}</span></div>`
+  }
+
+  // Current month days
+  for (let d = 1; d <= daysInMonth; d++) {
+    const isToday = d === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear()
+    const dateStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`
+    const dayEvents = events.filter(e => e.start_date === dateStr)
+
+    let eventsHtml = ''
+    dayEvents.slice(0, 3).forEach(e => {
+      const colorMap = { default: '#b7006f', pessoal: '#0b6e00', trabalho: '#ba1a1a', saude: '#5a5f63' }
+      const bgMap = { default: '#fdf2f8', pessoal: '#f0fdf4', trabalho: '#fef2f2', saude: '#f5f3f4' }
+      const color = colorMap[e.category] || '#b7006f'
+      const bg = bgMap[e.category] || '#fdf2f8'
+      eventsHtml += `<div class="event-chip-handwritten" style="color:${color};background:${bg}">${e.title}</div>`
+    })
+    if (dayEvents.length > 3) eventsHtml += `<div class="text-xs text-[#727782] handwritten-text">+${dayEvents.length - 3} mais</div>`
+
+    grid.innerHTML += `<div class="calendar-day ${isToday ? 'today' : ''}" data-date="${dateStr}">
+      <span class="text-xs font-bold ${isToday ? 'text-[#b7006f]' : ''}">${d}</span>
+      ${eventsHtml}
+    </div>`
+  }
+
+  // Fill remaining cells
+  const totalCells = firstDay + daysInMonth
+  const remaining = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7)
+  for (let i = 1; i <= remaining; i++) {
+    grid.innerHTML += `<div class="calendar-day other-month"><span class="text-xs font-medium">${i}</span></div>`
+  }
+
+  renderTodayAgenda()
+}
+
+function renderTodayAgenda() {
+  if (!$('today-events')) return
+  const today = new Date()
+  const dateStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`
+  const weekdays = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado']
+  $('today-date').textContent = `${weekdays[today.getDay()]}, ${today.getDate()}/${today.getMonth()+1}`
+
+  const dayEvents = events.filter(e => e.start_date === dateStr)
+  const container = $('today-events')
+
+  if (dayEvents.length === 0) {
+    container.innerHTML = '<p class="text-[#727782] text-sm handwritten-text text-lg">Nenhum evento hoje ✨</p>'
+    return
+  }
+
+  container.innerHTML = dayEvents.map(e => `
+    <div class="flex gap-3 group">
+      <div class="flex flex-col items-center">
+        <span class="handwritten-text font-bold text-sm">${e.start_time ? e.start_time.slice(0,5) : '--:--'}</span>
+        <div class="w-px flex-1 border-l border-dashed border-[#c2c6d2]/60 my-1"></div>
+      </div>
+      <div class="flex-1 p-2 -mt-1 transform ${Math.random() > 0.5 ? '-rotate-1' : 'rotate-1'}">
+        <p class="handwritten-title text-lg text-[#1b1c1d] leading-tight">${e.title}</p>
+        ${e.location ? `<p class="handwritten-text text-[#727782] text-sm">${e.location}</p>` : ''}
+        <div class="scribble-border w-full opacity-20 mt-1"></div>
+        <button class="del-event text-[#ba1a1a] text-xs handwritten-text mt-1 opacity-0 group-hover:opacity-100 transition-opacity" data-id="${e.id}">excluir</button>
+      </div>
+    </div>
+  `).join('')
+
+  container.querySelectorAll('.del-event').forEach(btn => {
+    btn.onclick = async () => {
+      if (!confirm('Excluir este evento?')) return
+      await supabase.from('events').delete().eq('id', btn.dataset.id)
+      toast('Evento excluído')
+      loadEvents(); renderCalendar()
+    }
+  })
+}
+
+function setupEventForm() {
+  if (!$('event-form')) return
+  const today = new Date()
+  $('ev-date').value = today.toISOString().split('T')[0]
+  $('ev-time').value = '09:00'
+
+  let selectedCat = 'default'
+  document.querySelectorAll('.cat-btn').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.cat-btn').forEach(b => { b.classList.remove('ring-2', 'ring-offset-2'); b.innerHTML = '' })
+      btn.classList.add('ring-2', 'ring-offset-2')
+      const colors = { default: 'ring-[#b7006f]', pessoal: 'ring-[#0b6e00]', trabalho: 'ring-[#ba1a1a]', saude: 'ring-[#5a5f63]' }
+      btn.classList.add(colors[btn.dataset.cat] || 'ring-[#b7006f]')
+      btn.innerHTML = '<span class="material-symbols-outlined text-white" style="font-size:18px">check</span>'
+      selectedCat = btn.dataset.cat
+    }
+  })
+
+  $('event-form').onsubmit = async (e) => {
+    e.preventDefault()
+    const title = $('ev-title').value.trim()
+    if (!title) { toast('Digite um título'); return }
+
+    const submitBtn = e.target.querySelector('button[type="submit"]')
+    submitBtn.disabled = true; submitBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px">sync</span> Salvando...'
+
+    const { error } = await supabase.from('events').insert({
+      user_id: currentUser.id,
+      title,
+      description: $('ev-desc').value,
+      location: $('ev-location').value,
+      start_date: $('ev-date').value,
+      start_time: $('ev-time').value || null,
+      category: selectedCat,
+      reminder: $('ev-reminder').value
+    })
+
+    submitBtn.disabled = false; submitBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px">save</span> Salvar Evento'
+
+    if (error) { toast('Erro: ' + error.message); return }
+    toast('Evento criado!')
+    $('ev-title').value = ''; $('ev-desc').value = ''; $('ev-location').value = ''
+    loadEvents(); renderCalendar()
+    showView('calendar-view'); $('view-title').textContent = 'Dashboard'
+  }
+}
+
+// ===================== TASKS =====================
+async function loadTasks() {
+  if (!$('tasks-list') || !currentUser) return
+  const { data, error } = await supabase.from('tasks').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false })
+  if (error || !data) return
+  tasks = data
+  renderTasks()
+}
+
+function renderTasks() {
+  const container = $('tasks-list')
+  if (!container) return
+  if (tasks.length === 0) {
+    container.innerHTML = '<p class="text-[#727782] text-center py-8 handwritten-text text-xl">Nenhuma tarefa ainda ✨</p>'
+    return
+  }
+  container.innerHTML = tasks.map(t => {
+    const priorityColors = { normal: 'bg-[#dfe3e8] text-[#424751]', alta: 'bg-[#ffdad6] text-[#ba1a1a]', urgente: 'bg-[#ba1a1a] text-white' }
+    const pColor = priorityColors[t.priority] || priorityColors.normal
+    return `
+    <div class="paper-card p-4 rounded-lg flex items-center justify-between group ${t.completed ? 'opacity-60' : ''}">
+      <div class="flex items-center gap-4">
+        <div class="hand-drawn-checkbox ${t.completed ? 'checked' : ''}" data-id="${t.id}"></div>
+        <div>
+          <h4 class="handwritten-text text-lg ${t.completed ? 'line-through text-[#94a3b8]' : 'text-[#1b1c1d]'}">${t.title}</h4>
+          ${t.due_date ? `<p class="handwritten-sub text-sm text-[#727782]">${t.due_date}</p>` : ''}
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        ${t.priority !== 'normal' ? `<span class="text-xs px-2 py-0.5 rounded-lg font-medium ${pColor}">${t.priority}</span>` : ''}
+        <button class="del-task text-[#ba1a1a] opacity-0 group-hover:opacity-100 transition-opacity" data-id="${t.id}">
+          <span class="material-symbols-outlined" style="font-size:18px">delete</span>
+        </button>
+      </div>
+    </div>`
+  }).join('')
+
+  container.querySelectorAll('.hand-drawn-checkbox').forEach(cb => {
+    cb.onclick = async () => {
+      const id = cb.dataset.id
+      const task = tasks.find(t => t.id === id)
+      if (!task) return
+      const { error } = await supabase.from('tasks').update({ completed: !task.completed }).eq('id', id)
+      if (!error) { loadTasks(); loadEvents() }
+    }
+  })
+  container.querySelectorAll('.del-task').forEach(btn => {
+    btn.onclick = async () => {
+      if (!confirm('Excluir tarefa?')) return
+      await supabase.from('tasks').delete().eq('id', btn.dataset.id)
+      toast('Tarefa excluída')
+      loadTasks()
+    }
+  })
+}
+
+function setupTasks() {
+  if (!$('add-task-btn')) return
+  $('add-task-btn').onclick = () => {
+    const container = $('tasks-list')
+    const form = document.createElement('div')
+    form.className = 'bg-white rounded-xl shadow-sm border border-[#b7006f]/40 p-4 fade-in'
+    const today = new Date().toISOString().split('T')[0]
+    form.innerHTML = `
+      <div class="handwriting-zone rounded-lg border border-[#c2c6d2]/40 h-12 flex items-center px-4 mb-3">
+        <input id="new-task-input" class="w-full bg-transparent border-none focus:ring-0 text-lg handwritten-text" placeholder="Digite a tarefa...">
+      </div>
+      <div class="flex items-center gap-3 mb-3">
+        <input id="new-task-date" type="date" value="${today}" class="flex-1 h-10 bg-[#f5f3f4] border border-[#c2c6d2] rounded-lg px-3 text-sm focus:ring-2 focus:ring-[#b7006f]">
+        <select id="new-task-priority" class="h-10 bg-[#f5f3f4] border border-[#c2c6d2] rounded-lg px-3 text-sm focus:ring-2 focus:ring-[#b7006f]">
+          <option value="normal">Normal</option>
+          <option value="alta">Alta</option>
+          <option value="urgente">Urgente</option>
+        </select>
+      </div>
+      <div class="flex justify-end gap-2">
+        <button id="new-task-cancel" class="px-4 py-1.5 text-sm rounded-lg text-[#727782] hover:bg-[#f5f3f4]">Cancelar</button>
+        <button id="new-task-save" class="px-6 py-1.5 text-sm bg-[#b7006f] text-white rounded-lg font-semibold hover:opacity-90">Salvar</button>
+      </div>
+    `
+    container.prepend(form)
+    $('new-task-input').focus()
+
+    $('new-task-cancel').onclick = () => form.remove()
+    $('new-task-save').onclick = async () => {
+      const title = $('new-task-input').value.trim()
+      if (!title) { toast('Digite o título'); return }
+      const { error } = await supabase.from('tasks').insert({
+        user_id: currentUser.id, title,
+        due_date: $('new-task-date').value || null,
+        priority: $('new-task-priority').value
+      })
+      if (error) { toast('Erro: ' + error.message); return }
+      toast('Tarefa criada!')
+      form.remove()
+      loadTasks()
+    }
+  }
+}
+
+// ===================== INIT =====================
+async function init() {
+  const { data: { session } } = await supabase.auth.getSession()
+  if (session?.user) {
+    renderApp(session.user)
+  } else {
+    renderAuth()
+  }
+}
+
+supabase.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_IN' && session?.user) renderApp(session.user)
+  else if (event === 'SIGNED_OUT') init()
+})
+
+init()
+</script>
+</body>
+</html>
