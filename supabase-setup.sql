@@ -73,3 +73,9 @@ CREATE POLICY "Users can update their own tasks"
 CREATE POLICY "Users can delete their own tasks"
   ON tasks FOR DELETE
   USING (auth.uid() = user_id);
+
+-- ============================================
+-- Migracao: Adicionar coluna 'drawing' se ja criou as tabelas antes
+-- ============================================
+ALTER TABLE events ADD COLUMN IF NOT EXISTS drawing TEXT DEFAULT '';
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS drawing TEXT DEFAULT '';
