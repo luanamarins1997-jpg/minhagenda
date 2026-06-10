@@ -6,7 +6,7 @@
 <title>Minha Agenda</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Gochi+Hand&family=Patrick+Hand&family=Caveat:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Caveat:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 </head>
 <body>
@@ -14,27 +14,21 @@
 <div id="app" class="flex items-center justify-center" style="min-height:100vh;color:#727782">Carregando...</div>
 
 <style>
-  body { font-family: 'Inter', sans-serif; background-color: #faf9fa; margin: 0; }
+  body { font-family: 'Inter', sans-serif; background-color: #faf9fa; margin: 0; -webkit-user-select: none; user-select: none; }
   .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
   .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background-color: #E2E8F0; }
   .calendar-day {
-    background-color: white; min-height: 100px; padding: 6px; cursor: pointer; overflow: hidden;
+    background-color: white; min-height: 100px; padding: 4px; cursor: pointer; overflow: hidden;
     background-image: linear-gradient(#f1f5f9 1px, transparent 1px); background-size: 100% 24px;
     transition: background-color 0.2s;
   }
   .calendar-day:hover { background-color: #F8FAFC; }
   .calendar-day.today { background-color: #fdf2f8; }
   .calendar-day.other-month { opacity: 0.35; background-color: #f1f5f9; }
-  .event-chip {
-    font-family: 'Patrick Hand', cursive; padding: 0px 4px; margin-bottom: 2px; font-size: 12px;
-    line-height: 1.3; transform: rotate(-0.5deg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-radius: 2px;
-  }
   .sidebar-paper {
     background-image: linear-gradient(90deg, transparent 39px, #abced4 39px, #abced4 41px, transparent 41px),
       linear-gradient(#e1e1e1 0.1em, transparent 0.1em); background-size: 100% 1.5rem; background-color: #ffffff;
   }
-  .handwritten-text { font-family: 'Patrick Hand', cursive; }
-  .handwritten-title { font-family: 'Gochi Hand', cursive; }
   .scribble-border { border-bottom: 2px solid #333; border-radius: 255px 15px 225px 15px/15px 225px 15px 255px; }
   .handwriting-zone { background-color: #fcfdff; background-image: linear-gradient(#e2e7ff 1px, transparent 1px); background-size: 100% 2rem; line-height: 2rem; }
   .paper-card {
@@ -42,11 +36,7 @@
     background-color: #fff; box-shadow: 2px 2px 5px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; transform: rotate(-0.5deg);
   }
   .paper-card:nth-child(even) { transform: rotate(0.5deg); background-color: #fdfdfd; }
-  .hand-drawn-checkbox {
-    border: 2px solid #64748B; border-radius: 4px; width: 24px; height: 24px; cursor: pointer;
-    display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0;
-  }
-  .hand-drawn-checkbox.checked::after { content: '✓'; font-family: 'Gochi Hand', cursive; font-size: 22px; color: #b7006f; line-height: 1; }
+  .canvas-pad { touch-action: none; cursor: crosshair; display: block; border-radius: 0.5rem; width: 100%; }
   .view { display: none; }
   .view.active { display: flex; }
   .fade-in { animation: fadeIn 0.2s ease; }
@@ -54,6 +44,7 @@
   .nav-item.active { background-color: #dfe3e8; color: #1b1c1d; border-radius: 0.5rem; }
   #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1b1c1d; color: white; padding: 12px 24px; border-radius: 12px; font-size: 14px; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
   #toast.show { opacity: 1; }
+  .handwriting-stroke { display: inline-block; vertical-align: middle; border-radius: 4px; }
   @media (max-width: 1024px) {
     .sidebar { width: 72px !important; }
     .sidebar .nav-label, .sidebar .app-title, .sidebar .app-subtitle, .sidebar .user-info { display: none; }
@@ -61,6 +52,7 @@
     .sidebar .create-btn span { display: none; }
     .sidebar .user-section { display: none; }
     main { margin-left: 72px !important; }
+    #today-agenda { display: none !important; }
   }
 </style>
 
@@ -88,17 +80,170 @@ function showView(id) {
   const navEl = $(navMap[id]); if (navEl) navEl.classList.add('active')
 }
 
+// ===================== HANDWRITING PAD =====================
+class HandwritingPad {
+  constructor(container, opts = {}) {
+    this.container = container
+    this.height = opts.height || 80
+    this.bgColor = opts.bgColor || '#fcfdff'
+    this.lineColor = opts.color || '#1b1c1d'
+    this.lineW = opts.lineWidth || 3
+    this.ruleColor = '#e2e7ff'
+    this.dpr = window.devicePixelRatio || 1
+    this.clearable = opts.clearable !== false
+    this._strokes = []
+    this._hasDrawn = false
+
+    this.wrapper = document.createElement('div')
+    this.wrapper.style.cssText = `position:relative;width:100%;height:${this.height}px;border-radius:0.5rem;overflow:hidden;border:1px solid #e5e7eb;background:${this.bgColor}`
+
+    this.canvas = document.createElement('canvas')
+    this.canvas.className = 'canvas-pad'
+    this.ctx = this.canvas.getContext('2d')
+    this._resize()
+    this._drawBg()
+    this.wrapper.appendChild(this.canvas)
+
+    if (this.clearable) {
+      this.clearBtn = document.createElement('button')
+      this.clearBtn.type = 'button'
+      this.clearBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px">undo</span>'
+      this.clearBtn.style.cssText = 'position:absolute;top:4px;right:4px;background:rgba(255,255,255,0.85);border:1px solid #e5e7eb;border-radius:6px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity 0.2s;z-index:2;color:#666'
+      this.wrapper.appendChild(this.clearBtn)
+      this.wrapper.addEventListener('mouseenter', () => { this.clearBtn.style.opacity = '1' })
+      this.wrapper.addEventListener('mouseleave', () => { if (!this._hasDrawn) this.clearBtn.style.opacity = '0' })
+      this.clearBtn.onclick = () => this.clear()
+    }
+
+    container.appendChild(this.wrapper)
+
+    this._drawing = false
+    this.canvas.addEventListener('pointerdown', e => this._start(e))
+    this.canvas.addEventListener('pointermove', e => this._move(e))
+    this.canvas.addEventListener('pointerup', e => this._end(e))
+    this.canvas.addEventListener('pointerleave', e => this._end(e))
+    this.canvas.addEventListener('pointercancel', e => this._end(e))
+    this.canvas.style.touchAction = 'none'
+  }
+
+  _resize() {
+    const rect = this.container.getBoundingClientRect()
+    const w = rect.width || 600
+    this.canvas.width = w * this.dpr
+    this.canvas.height = this.height * this.dpr
+    this.canvas.style.height = this.height + 'px'
+    this.ctx.scale(this.dpr, this.dpr)
+    this.w = w
+    this.h = this.height
+  }
+
+  _drawBg() {
+    const ctx = this.ctx
+    ctx.save()
+    ctx.scale(1/this.dpr, 1/this.dpr)
+    ctx.fillStyle = this.bgColor
+    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
+    ctx.strokeStyle = this.ruleColor
+    ctx.lineWidth = 0.5
+    const lineH = 12
+    for (let y = lineH * this.dpr; y < this.canvas.height; y += lineH * this.dpr) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(this.canvas.width, y); ctx.stroke()
+    }
+    ctx.restore()
+  }
+
+  _start(e) {
+    e.preventDefault()
+    this._drawing = true
+    this._hasDrawn = true
+    if (this.clearBtn) this.clearBtn.style.opacity = '1'
+    const p = this._pos(e)
+    this._stroke = [p]
+    this.ctx.save()
+    this.ctx.scale(1/this.dpr, 1/this.dpr)
+    this.ctx.beginPath()
+    this.ctx.moveTo(p.x * this.dpr, p.y * this.dpr)
+    this.ctx.strokeStyle = this.lineColor
+    this.ctx.lineWidth = (e.pressure && e.pressure > 0 ? e.pressure * this.lineW * 2 : this.lineW) * this.dpr
+    this.ctx.lineCap = 'round'
+    this.ctx.lineJoin = 'round'
+    this.ctx.restore()
+  }
+
+  _move(e) {
+    if (!this._drawing) return
+    e.preventDefault()
+    const p = this._pos(e)
+    this._stroke.push(p)
+    const pressure = e.pressure && e.pressure > 0 ? e.pressure * this.lineW * 2 : this.lineW
+    this.ctx.save()
+    this.ctx.scale(1/this.dpr, 1/this.dpr)
+    this.ctx.strokeStyle = this.lineColor
+    this.ctx.lineWidth = pressure * this.dpr
+    this.ctx.lineCap = 'round'
+    this.ctx.lineJoin = 'round'
+    this.ctx.lineTo(p.x * this.dpr, p.y * this.dpr)
+    this.ctx.stroke()
+    this.ctx.restore()
+  }
+
+  _end(e) {
+    if (!this._drawing) return
+    this._drawing = false
+    this._strokes.push(this._stroke)
+  }
+
+  _pos(e) {
+    const rect = this.canvas.getBoundingClientRect()
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top }
+  }
+
+  toDataURL() {
+    if (!this._hasDrawn) return ''
+    return this.canvas.toDataURL('image/png')
+  }
+
+  clear() {
+    this._hasDrawn = false
+    this._strokes = []
+    this._drawBg()
+    if (this.clearBtn && !this.wrapper.matches(':hover')) this.clearBtn.style.opacity = '0'
+  }
+
+  loadFromDataURL(dataURL) {
+    if (!dataURL || dataURL === '') return
+    const img = new Image()
+    img.onload = () => {
+      this._hasDrawn = true
+      if (this.clearBtn) this.clearBtn.style.opacity = '1'
+      this.ctx.save()
+      this.ctx.scale(1/this.dpr, 1/this.dpr)
+      this.ctx.drawImage(img, 0, 0, this.w, this.h)
+      this.ctx.restore()
+    }
+    img.src = dataURL
+  }
+
+  isEmpty() { return !this._hasDrawn }
+}
+
+function padImgHTML(dataURL, maxH) {
+  if (!dataURL) return ''
+  return `<img class="handwriting-stroke" src="${dataURL}" style="max-height:${maxH||40}px;width:auto;border-radius:2px">`
+}
+
+// ===================== RENDER APP =====================
 function renderApp() {
   $('app').innerHTML = `
     <div id="app-screen" class="flex h-screen overflow-hidden bg-[#faf9fa]">
       <aside class="sidebar fixed left-0 top-0 h-full w-[280px] bg-white flex flex-col p-4 gap-3 border-r border-[#c2c6d2]/30 z-50" style="transition:width 0.2s">
         <div class="px-4 py-4">
-          <h1 class="app-title text-2xl font-bold text-[#b7006f]" style="font-family:'Gochi Hand',cursive">Minha Agenda</h1>
-          <p class="app-subtitle text-xs text-[#424751] opacity-70">Elevated Planner</p>
+          <h1 class="app-title text-2xl font-bold text-[#b7006f]" style="font-family:sans-serif">Minha Agenda</h1>
+          <p class="app-subtitle text-xs text-[#424751] opacity-70">Escrita Manual</p>
         </div>
         <button id="nav-event" class="nav-item create-btn flex items-center gap-3 mx-2 px-4 py-3 bg-[#b7006f] text-white rounded-xl font-semibold hover:opacity-90 active:scale-95 transition-all shadow-md" style="border:none;cursor:pointer">
-          <span class="material-symbols-outlined">add</span>
-          <span>Novo Evento</span>
+          <span class="material-symbols-outlined">edit_note</span>
+          <span>Escrever Evento</span>
         </button>
         <nav class="flex flex-col gap-1 px-2 mt-2">
           <a id="nav-dashboard" class="nav-item flex items-center gap-3 px-4 py-3 text-[#5a5f63] hover:bg-[#e9e8e9] rounded-lg transition-all cursor-pointer active">
@@ -116,14 +261,14 @@ function renderApp() {
         </nav>
         <div class="user-section mt-auto p-4 flex items-center gap-3 border-t border-[#c2c6d2]/30">
           <div class="w-10 h-10 rounded-full bg-[#b7006f] flex items-center justify-center text-white font-bold text-lg">A</div>
-          <div class="user-info"><p class="text-sm font-semibold text-[#1b1c1d]">Anonimo</p><p class="text-xs text-[#424751]">Modo Local</p></div>
+          <div class="user-info"><p class="text-sm font-semibold text-[#1b1c1d]">Escrita Manual</p><p class="text-xs text-[#424751]">Apple Pencil</p></div>
         </div>
       </aside>
       <main class="flex-1 ml-[280px] h-screen flex flex-col overflow-hidden" style="transition:margin-left 0.2s">
         <header class="h-16 bg-white/80 backdrop-blur-md flex items-center justify-between px-6 border-b border-[#c2c6d2]/20 flex-shrink-0">
           <h2 id="view-title" class="text-xl font-bold text-[#1b1c1d]">Dashboard</h2>
           <div class="flex items-center gap-4">
-            <span class="text-sm text-[#727782] hidden md:inline">Modo Anonimo</span>
+            <span class="text-sm text-[#727782] hidden md:inline">✏️ Escreva com sua caneta</span>
           </div>
         </header>
         <div class="flex-1 overflow-hidden">
@@ -144,25 +289,23 @@ function renderApp() {
                 </div>
                 <div id="calendar-grid" class="flex-1 calendar-grid overflow-y-auto"></div>
               </section>
-              <aside id="today-agenda" class="w-[300px] flex-shrink-0 bg-white rounded-xl shadow-sm border border-[#c2c6d2]/30 flex flex-col sidebar-paper overflow-hidden hidden md:flex">
+              <aside id="today-agenda" class="w-[300px] flex-shrink-0 bg-white rounded-xl shadow-sm border border-[#c2c6d2]/30 flex flex-col sidebar-paper overflow-hidden hidden lg:flex">
                 <div class="p-4 border-b border-[#c2c6d2]/20 bg-white/80">
                   <h3 class="font-semibold text-[#1b1c1d]">Agenda de Hoje</h3>
-                  <p id="today-date" class="handwritten-text text-[#424751] text-sm"></p>
+                  <p id="today-date" class="text-sm text-[#424751]"></p>
                 </div>
-                <div id="today-events" class="flex-1 p-4 space-y-4 overflow-y-auto"></div>
+                <div id="today-events" class="flex-1 p-4 space-y-3 overflow-y-auto"></div>
               </aside>
             </div>
           </div>
           <!-- EVENT VIEW -->
           <div id="event-view" class="view flex-1 h-full p-6 overflow-y-auto">
-            <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-sm border border-[#c2c6d2]/30 p-8">
-              <h2 class="text-2xl font-bold text-[#1b1c1d] mb-6" style="font-family:'Gochi Hand',cursive">Novo Evento</h2>
-              <form id="event-form" class="space-y-6">
+            <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-sm border border-[#c2c6d2]/30 p-6">
+              <h2 class="text-2xl font-bold text-[#1b1c1d] mb-6" style="font-family:sans-serif">Novo Evento</h2>
+              <form id="event-form" class="space-y-5">
                 <div>
-                  <label class="text-sm font-medium text-[#424751] uppercase tracking-wider">Titulo</label>
-                  <div class="handwriting-zone rounded-lg border border-[#c2c6d2]/40 mt-1 h-14 flex items-center px-4">
-                    <input id="ev-title" class="w-full bg-transparent border-none text-xl" style="font-family:'Patrick Hand',cursive;outline:none" placeholder="Escreva o titulo aqui..." required>
-                  </div>
+                  <label class="text-sm font-medium text-[#424751] uppercase tracking-wider">Escreva o titulo</label>
+                  <div id="pad-title" class="mt-1"></div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                   <div>
@@ -181,16 +324,12 @@ function renderApp() {
                   </div>
                 </div>
                 <div>
-                  <label class="text-sm font-medium text-[#424751] uppercase tracking-wider">Local</label>
-                  <div class="handwriting-zone rounded-lg border border-[#c2c6d2]/40 mt-1 h-12 flex items-center px-4">
-                    <input id="ev-location" class="w-full bg-transparent border-none text-lg" style="font-family:'Patrick Hand',cursive;outline:none" placeholder="Onde vai ser?">
-                  </div>
+                  <label class="text-sm font-medium text-[#424751] uppercase tracking-wider">Escreva o local</label>
+                  <div id="pad-location" class="mt-1"></div>
                 </div>
                 <div>
-                  <label class="text-sm font-medium text-[#424751] uppercase tracking-wider">Descricao</label>
-                  <div class="handwriting-zone rounded-lg border border-[#c2c6d2]/40 mt-1 p-2" style="min-height:120px">
-                    <textarea id="ev-desc" class="w-full bg-transparent border-none p-2 text-base" style="font-family:'Patrick Hand',cursive;outline:none;line-height:2rem;resize:none" placeholder="Notas ou descricao..." rows="4"></textarea>
-                  </div>
+                  <label class="text-sm font-medium text-[#424751] uppercase tracking-wider">Escreva observacoes</label>
+                  <div id="pad-desc" class="mt-1"></div>
                 </div>
                 <div class="flex items-center gap-4">
                   <div class="flex-1">
@@ -225,9 +364,9 @@ function renderApp() {
           <div id="tasks-view" class="view flex-1 h-full p-6 overflow-y-auto">
             <div class="max-w-3xl mx-auto">
               <div class="flex items-center justify-between mb-6">
-                <h2 class="text-2xl font-bold text-[#1b1c1d]" style="font-family:'Gochi Hand',cursive">Tarefas</h2>
+                <h2 class="text-2xl font-bold text-[#1b1c1d]" style="font-family:sans-serif">Tarefas</h2>
                 <button id="add-task-btn" class="px-5 py-2.5 bg-[#b7006f] text-white rounded-lg font-semibold hover:opacity-90 transition-all active:scale-[0.98] shadow-md flex items-center gap-2 border-none cursor-pointer">
-                  <span class="material-symbols-outlined" style="font-size:18px">add</span> Nova Tarefa
+                  <span class="material-symbols-outlined" style="font-size:18px">edit_note</span> Escrever Tarefa
                 </button>
               </div>
               <div id="tasks-list" class="space-y-3"></div>
@@ -239,12 +378,12 @@ function renderApp() {
               <h2 class="text-2xl font-bold text-[#1b1c1d] mb-6">Configuracoes</h2>
               <div class="space-y-4">
                 <div class="p-4 bg-[#f5f3f4] rounded-lg">
-                  <p class="font-medium text-[#1b1c1d]">Modo Anonimo</p>
-                  <p class="text-sm text-[#727782]">Dados salvos na nuvem sem login</p>
+                  <p class="font-medium text-[#1b1c1d]">Modo Escrita Manual</p>
+                  <p class="text-sm text-[#727782]">Use sua Apple Pencil para escrever</p>
                 </div>
                 <div class="p-4 bg-[#f5f3f4] rounded-lg">
                   <p class="font-medium text-[#1b1c1d]">Sobre</p>
-                  <p class="text-sm text-[#727782]">Minha Agenda v1.0 • Dados na nuvem</p>
+                  <p class="text-sm text-[#727782]">Minha Agenda v2.0 • Escrita Manual</p>
                 </div>
               </div>
             </div>
@@ -265,7 +404,16 @@ function renderApp() {
   $('next-month').onclick = () => { currentMonth++; if (currentMonth > 11) { currentMonth = 0; currentYear++ } renderCalendar() }
   $('today-btn').onclick = () => { const d = new Date(); currentMonth = d.getMonth(); currentYear = d.getFullYear(); renderCalendar() }
 
-  loadEvents().then(() => { renderCalendar(); setupEventForm(); setupTasks() })
+  loadEvents().then(() => { renderCalendar(); initPads(); setupEventForm(); setupTasks() })
+}
+
+// ===================== HANDWRITING PADS =====================
+let pads = {}
+
+function initPads() {
+  pads.title = new HandwritingPad($('pad-title'), { height: 80, clearable: true })
+  pads.location = new HandwritingPad($('pad-location'), { height: 60, clearable: true })
+  pads.desc = new HandwritingPad($('pad-desc'), { height: 140, clearable: true })
 }
 
 // ===================== EVENTS =====================
@@ -295,14 +443,18 @@ function renderCalendar() {
     const dateStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`
     const dayEvents = events.filter(e => e.start_date === dateStr)
     let evHtml = ''
-    const colorMap = { default: '#b7006f', pessoal: '#0b6e00', trabalho: '#ba1a1a', saude: '#5a5f63' }
-    const bgMap = { default: '#fdf2f8', pessoal: '#f0fdf4', trabalho: '#fef2f2', saude: '#f5f3f4' }
     dayEvents.slice(0, 3).forEach(e => {
-      const c = colorMap[e.category] || '#b7006f'
-      const b = bgMap[e.category] || '#fdf2f8'
-      evHtml += `<div class="event-chip" style="color:${c};background:${b}">${e.title}</div>`
+      if (e.drawing) {
+        evHtml += `<img src="${e.drawing}" style="max-height:18px;width:auto;display:block;margin-bottom:1px;border-radius:1px">`
+      } else {
+        const colorMap = { default: '#b7006f', pessoal: '#0b6e00', trabalho: '#ba1a1a', saude: '#5a5f63' }
+        const bgMap = { default: '#fdf2f8', pessoal: '#f0fdf4', trabalho: '#fef2f2', saude: '#f5f3f4' }
+        const c = colorMap[e.category] || '#b7006f'
+        const b = bgMap[e.category] || '#fdf2f8'
+        evHtml += `<div style="font-family:sans-serif;font-size:11px;padding:0 4px;margin-bottom:1px;border-radius:2px;color:${c};background:${b};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.title}</div>`
+      }
     })
-    if (dayEvents.length > 3) evHtml += `<div class="text-xs text-[#727782] handwritten-text">+${dayEvents.length - 3} mais</div>`
+    if (dayEvents.length > 3) evHtml += `<div style="font-size:11px;color:#727782">+${dayEvents.length - 3} mais</div>`
     html += `<div class="calendar-day ${isToday ? 'today' : ''}" data-date="${dateStr}"><span class="text-xs font-bold ${isToday ? 'text-[#b7006f]' : ''}">${d}</span>${evHtml}</div>`
   }
 
@@ -323,19 +475,19 @@ function renderTodayAgenda() {
   if ($('today-date')) $('today-date').textContent = `${weekdays[today.getDay()]}, ${today.getDate()}/${today.getMonth()+1}`
 
   const dayEvents = events.filter(e => e.start_date === dateStr)
-  if (dayEvents.length === 0) { container.innerHTML = '<p class="text-[#727782] text-sm" style="font-family:\'Patrick Hand\',cursive">Nenhum evento hoje ✨</p>'; return }
+  if (dayEvents.length === 0) { container.innerHTML = '<p style="font-size:14px;color:#727782">Nenhum evento hoje ✨</p>'; return }
 
   container.innerHTML = dayEvents.map(e => `
     <div class="flex gap-3 group">
       <div class="flex flex-col items-center">
-        <span class="handwritten-text font-bold text-sm" style="font-family:'Patrick Hand',cursive">${e.start_time ? e.start_time.slice(0,5) : '--:--'}</span>
+        <span style="font-size:13px;font-weight:bold;font-family:sans-serif">${e.start_time ? e.start_time.slice(0,5) : '--:--'}</span>
         <div class="w-px flex-1 border-l border-dashed border-[#c2c6d2]/60 my-1"></div>
       </div>
-      <div class="flex-1 p-2 -mt-1" style="transform:rotate(${Math.random() > 0.5 ? '-1deg' : '1deg'})">
-        <p class="text-lg text-[#1b1c1d] leading-tight" style="font-family:'Gochi Hand',cursive">${e.title}</p>
-        ${e.location ? `<p class="text-[#727782] text-sm" style="font-family:'Patrick Hand',cursive">${e.location}</p>` : ''}
+      <div class="flex-1 p-1 -mt-1">
+        ${e.drawing ? `<img src="${e.drawing}" style="max-height:60px;width:auto;border-radius:4px;display:block">` : `<p style="font-weight:600;font-size:14px">${e.title}</p>`}
+        ${e.location ? `<img src="${e.location}" style="max-height:28px;width:auto;border-radius:2px;margin-top:2px;display:block" class="opacity-70">` : ''}
         <div class="scribble-border w-full opacity-20 mt-1"></div>
-        <button class="del-event text-[#ba1a1a] text-xs mt-1 opacity-0 group-hover:opacity-100 transition-opacity bg-transparent border-none cursor-pointer" style="font-family:'Patrick Hand',cursive" data-id="${e.id}">excluir</button>
+        <button class="del-event text-[#ba1a1a] text-xs mt-1 opacity-0 group-hover:opacity-100 transition-opacity bg-transparent border-none cursor-pointer" data-id="${e.id}">excluir</button>
       </div>
     </div>`).join('')
 
@@ -369,14 +521,16 @@ function setupEventForm() {
 
   $('event-form').onsubmit = async (e) => {
     e.preventDefault()
-    const title = $('ev-title').value.trim()
-    if (!title) { toast('Digite um titulo'); return }
+    const titlePad = pads.title
+    if (!titlePad || titlePad.isEmpty()) { toast('Escreva o titulo do evento com sua caneta'); return }
     const submitBtn = e.target.querySelector('button[type="submit"]')
     submitBtn.disabled = true; submitBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px">sync</span> Salvando...'
     const { error } = await supabase.from('events').insert({
-      user_id: userId, title,
-      description: $('ev-desc').value,
-      location: $('ev-location').value,
+      user_id: userId,
+      title: 'evento-manual',
+      drawing: titlePad.toDataURL(),
+      location: pads.location ? pads.location.toDataURL() : '',
+      description: pads.desc ? pads.desc.toDataURL() : '',
       start_date: $('ev-date').value,
       start_time: $('ev-time').value || null,
       category: selectedCat,
@@ -385,7 +539,7 @@ function setupEventForm() {
     submitBtn.disabled = false; submitBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px">save</span> Salvar Evento'
     if (error) { toast('Erro: ' + error.message); return }
     toast('Evento criado!')
-    $('ev-title').value = ''; $('ev-desc').value = ''; $('ev-location').value = ''
+    titlePad.clear(); if (pads.location) pads.location.clear(); if (pads.desc) pads.desc.clear()
     await loadEvents(); renderCalendar()
     showView('calendar-view'); $('view-title').textContent = 'Dashboard'
   }
@@ -403,20 +557,21 @@ async function loadTasks() {
 function renderTasks() {
   const container = $('tasks-list')
   if (!container) return
-  if (tasks.length === 0) { container.innerHTML = '<p class="text-[#727782] text-center py-8" style="font-family:\'Patrick Hand\',cursive;font-size:1.25rem">Nenhuma tarefa ainda ✨</p>'; return }
+  if (tasks.length === 0) { container.innerHTML = '<p class="text-[#727782] text-center py-8" style="font-size:1.25rem">Nenhuma tarefa ainda ✨</p>'; return }
   container.innerHTML = tasks.map(t => {
     const pc = { normal: 'bg-[#dfe3e8] text-[#424751]', alta: 'bg-[#ffdad6] text-[#ba1a1a]', urgente: 'bg-[#ba1a1a] text-white' }
+    const priorityColor = pc[t.priority] || pc.normal
     return `
     <div class="paper-card p-4 rounded-lg flex items-center justify-between group ${t.completed ? 'opacity-60' : ''}">
-      <div class="flex items-center gap-4">
-        <div class="hand-drawn-checkbox ${t.completed ? 'checked' : ''}" data-id="${t.id}"></div>
-        <div>
-          <h4 class="text-lg ${t.completed ? 'line-through text-[#94a3b8]' : 'text-[#1b1c1d]'}" style="font-family:'Gochi Hand',cursive">${t.title}</h4>
-          ${t.due_date ? `<p class="text-sm text-[#727782]" style="font-family:'Patrick Hand',cursive">${t.due_date}</p>` : ''}
+      <div class="flex items-center gap-4 flex-1 min-w-0">
+        <div class="hand-drawn-checkbox ${t.completed ? 'checked' : ''} flex-shrink-0" data-id="${t.id}"></div>
+        <div class="min-w-0 flex-1">
+          ${t.drawing ? `<img src="${t.drawing}" style="max-height:48px;width:auto;border-radius:4px;display:block" class="${t.completed ? 'opacity-50' : ''}">` : `<h4 class="text-lg font-semibold ${t.completed ? 'line-through text-[#94a3b8]' : 'text-[#1b1c1d]'}">${t.title}</h4>`}
+          ${t.due_date ? `<p style="font-size:13px;color:#727782;margin-top:2px">${t.due_date}</p>` : ''}
         </div>
       </div>
-      <div class="flex items-center gap-3">
-        ${t.priority !== 'normal' ? `<span class="text-xs px-2 py-0.5 rounded-lg font-medium ${pc[t.priority] || pc.normal}">${t.priority}</span>` : ''}
+      <div class="flex items-center gap-3 flex-shrink-0 ml-2">
+        ${t.priority !== 'normal' ? `<span class="text-xs px-2 py-0.5 rounded-lg font-medium ${priorityColor}">${t.priority}</span>` : ''}
         <button class="del-task text-[#ba1a1a] opacity-0 group-hover:opacity-100 transition-opacity bg-transparent border-none cursor-pointer" data-id="${t.id}"><span class="material-symbols-outlined" style="font-size:18px">delete</span></button>
       </div>
     </div>`
@@ -448,8 +603,8 @@ function setupTasks() {
     form.className = 'bg-white rounded-xl shadow-sm border border-[#b7006f]/40 p-4 fade-in'
     const today = new Date().toISOString().split('T')[0]
     form.innerHTML = `
-      <div class="handwriting-zone rounded-lg border border-[#c2c6d2]/40 h-12 flex items-center px-4 mb-3">
-        <input id="new-task-input" class="w-full bg-transparent border-none text-lg" style="font-family:'Patrick Hand',cursive;outline:none" placeholder="Digite a tarefa...">
+      <div class="mb-3">
+        <div id="pad-task" style="height:60px"></div>
       </div>
       <div class="flex items-center gap-3 mb-3">
         <input id="new-task-date" type="date" value="${today}" class="flex-1 h-10 bg-[#f5f3f4] border border-[#c2c6d2] rounded-lg px-3 text-sm focus:ring-2 focus:ring-[#b7006f]">
@@ -464,15 +619,17 @@ function setupTasks() {
         <button id="new-task-save" class="px-6 py-1.5 text-sm bg-[#b7006f] text-white rounded-lg font-semibold hover:opacity-90 border-none cursor-pointer">Salvar</button>
       </div>`
     container.prepend(form)
-    const input = $('new-task-input'); if (input) input.focus()
+
+    const taskPad = new HandwritingPad($('pad-task'), { height: 60, clearable: true })
+
     const cancel = $('new-task-cancel'); if (cancel) cancel.onclick = () => form.remove()
     const save = $('new-task-save')
     if (save) save.onclick = async () => {
-      const input2 = $('new-task-input')
-      const title = input2 ? input2.value.trim() : ''
-      if (!title) { toast('Digite o titulo'); return }
+      if (taskPad.isEmpty()) { toast('Escreva a tarefa com sua caneta'); return }
       const { error } = await supabase.from('tasks').insert({
-        user_id: userId, title,
+        user_id: userId,
+        title: 'tarefa-manual',
+        drawing: taskPad.toDataURL(),
         due_date: ($('new-task-date') || {}).value || null,
         priority: ($('new-task-priority') || {}).value || 'normal'
       })
