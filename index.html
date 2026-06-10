@@ -352,11 +352,11 @@ function setupAddTask(period) {
         return
       }
       const { error } = await supabase.from('tasks').insert({
-        user_id: userId, task_date: selectedDate,
-        period, drawing, status: 'pending'
-      })
-      if (error) { toast('Erro: '+error.message); return }
-      toast('Tarefa adicionada!')
+          user_id: userId, task_date: selectedDate,
+          period, drawing, title: '', status: 'pending'
+        })
+        if (error) { toast('Erro: '+error.message); return }
+        toast('Tarefa adicionada!')
       wrap.remove()
       await loadDayTasks(selectedDate)
     }

@@ -33,3 +33,8 @@ CREATE POLICY "Usuarios podem excluir tarefas"
 
 -- Remove tabelas antigas se existirem
 DROP TABLE IF EXISTS events CASCADE;
+
+-- Caso ja tenha criado antes: remove NOT NULL do title
+ALTER TABLE tasks ALTER COLUMN title DROP NOT NULL;
+ALTER TABLE tasks ALTER COLUMN title SET DEFAULT '';
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS title TEXT DEFAULT '';
