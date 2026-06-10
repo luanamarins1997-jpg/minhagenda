@@ -19,20 +19,14 @@
 
   .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
   .cal-cell {
-    background:#fff; min-height:90px; padding:4px 6px; cursor:pointer; border-radius:4px;
-    transition:background 0.15s; position:relative;
+    background:#fff; min-height:100px; padding:4px 5px; cursor:pointer; border-radius:4px;
+    transition:background 0.15s; position:relative; overflow:hidden;
   }
   .cal-cell:hover { background:#f0f0f2; }
   .cal-cell.today { background:#fdf2f8; }
   .cal-cell.other { opacity:0.3; }
   .cal-num { font-size:13px; font-weight:600; }
   .cal-num.today { color:#b7006f; }
-
-  .period-dots { display:flex; gap:3px; margin-top:2px; flex-wrap:wrap; }
-  .p-dot { width:7px; height:7px; border-radius:50%; }
-  .p-dot.manha { background:#b7006f; }
-  .p-dot.tarde { background:#e67e22; }
-  .p-dot.noite { background:#3b82f6; }
 
   .day-view { max-width:640px; margin:0 auto; padding:16px; }
   .period-section { margin-bottom:24px; }
@@ -95,9 +89,8 @@
   #toast.show { opacity:1; }
 
   @media (max-width:640px) {
-    .cal-cell { min-height:68px; padding:3px 4px; }
-    .cal-num { font-size:12px; }
-    .p-dot { width:6px; height:6px; }
+    .cal-cell { min-height:76px; padding:2px 3px; }
+    .cal-num { font-size:11px; }
   }
 </style>
 
@@ -223,7 +216,8 @@ function renderCalendar() {
     const tem = { manha: td.some(t=>t.period==='manha'), tarde: td.some(t=>t.period==='tarde'), noite: td.some(t=>t.period==='noite') }
     html += `<div class="cal-cell ${ehHoje?'today':''}" data-date="${ds}">
       <div class="cal-num ${ehHoje?'today':''}">${d}</div>
-      ${(tem.manha||tem.tarde||tem.noite) ? `<div class="period-dots">${tem.manha?'<div class="p-dot manha"></div>':''}${tem.tarde?'<div class="p-dot tarde"></div>':''}${tem.noite?'<div class="p-dot noite"></div>':''}</div>` : ''}
+      ${td.slice(0,3).map(t => t.drawing ? `<img src="${t.drawing}" style="max-height:16px;width:auto;display:block;margin-top:1px;border-radius:1px">` : `<span style="font-size:10px;color:#555;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">${t.title||''}</span>`).join('')}
+      ${td.length > 3 ? `<span style="font-size:10px;color:#999">+${td.length-3}</span>` : ''}
     </div>`
   }
 
