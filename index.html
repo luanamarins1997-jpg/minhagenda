@@ -312,15 +312,11 @@ function renderCalendar() {
   const grid = $('cal-grid')
   grid.innerHTML = html
 
-  // Preencher altura das celulas para ocupar toda a tela
+  // Preencher altura das celulas (base 1096px)
   const weeks = Math.ceil((first + days) / 7)
-  const calMain = grid.parentElement
-  if (calMain) {
-    const avail = calMain.clientHeight - 12 // desconta padding
-    const gapTotal = (weeks - 1) * 2
-    const cellH = Math.max(Math.floor((avail - gapTotal) / weeks), 80)
-    grid.querySelectorAll('.cal-cell').forEach(el => { el.style.height = cellH + 'px' })
-  }
+  const gapTotal = (weeks - 1) * 2
+  const cellH = Math.floor((1096 - 9 - gapTotal) / weeks)
+  grid.querySelectorAll('.cal-cell').forEach(el => { el.style.height = cellH + 'px'; el.style.minHeight = cellH + 'px' })
 
   grid.querySelectorAll('.cal-cell').forEach(el => {
     el.addEventListener('click', () => {
@@ -580,7 +576,7 @@ function renderApp() {
       <!-- CALENDAR VIEW -->
       <div id="calendar-view" style="flex:1;display:flex;overflow:hidden">
         <!-- Calendar main (left) -->
-        <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+        <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;max-width:1265px">
           <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#fff;border-bottom:1px solid #f0f0f2">
             <div style="display:flex;align-items:center;gap:6px">
               <button id="prev-month" class="back-btn" style="padding:4px 6px"><span class="material-symbols-outlined">chevron_left</span></button>
@@ -592,7 +588,7 @@ function renderApp() {
           <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;padding:2px 6px;background:#fafafa;border-bottom:1px solid #f0f0f2">
             ${['Dom','Seg','Ter','Qua','Qui','Sex','Sab'].map(d => `<div style="text-align:center;font-size:10px;font-weight:600;color:#999;padding:3px 0">${d}</div>`).join('')}
           </div>
-          <div id="cal-grid" class="cal-grid" style="flex:1;padding:3px 6px 6px;overflow-y:auto"></div>
+          <div id="cal-grid" class="cal-grid" style="flex:1;padding:3px 6px 6px;overflow-y:auto;min-height:1096px"></div>
         </div>
         <!-- Today tasks panel (right) -->
         <div style="width:180px;flex-shrink:0;display:flex;flex-direction:column;border-left:1px solid #f0f0f2;background:#fafafa">
