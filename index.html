@@ -434,71 +434,25 @@ async function loadDayTasks(date) {
   }
 }
 
-// =============== ADD TASK ===============
-function setupAddTask(period) {
-  const btn = $(`add-btn-${period}`)
-  if (!btn) return
-  btn.onclick = () => {
-    const container = $(`tasks-${period}`)
-    if ($('inline-pad')) return
+// =============== DAY PAD (Quick Write) ===============
+let dayPadInstance = null
 
-    const wrap = document.createElement('div')
-    wrap.id = 'inline-pad'
-    wrap.className = 'add-area'
+function setupDayPad() {
+  if (!$('day-pad')) return
+  dayPadInstance = new HandwritingPad($('day-pad'), { h: 100, clearable: true })
 
-    const padWrap = document.createElement('div')
-    padWrap.className = 'add-pad-wrap'
-    const padDiv = document.createElement('div')
-    padDiv.id = 'pad-inline'
-    padWrap.appendChild(padDiv)
-    wrap.appendChild(padWrap)
-
-    const actions = document.createElement('div')
-    actions.className = 'add-actions'
-
-    const cancelBtn = document.createElement('button')
-    cancelBtn.id = 'inline-cancel'
-    cancelBtn.className = 'back-btn'
-    cancelBtn.textContent = 'Cancelar'
-    actions.appendChild(cancelBtn)
-
-    const saveBtn = document.createElement('button')
-    saveBtn.id = 'inline-save'
-    saveBtn.textContent = 'Salvar'
-    saveBtn.style.cssText = 'padding:6px 16px;background:#b7006f;color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:13px'
-    actions.appendChild(saveBtn)
-    wrap.appendChild(actions)
-
-    if (container.querySelector('.empty-state')) container.innerHTML = ''
-    container.appendChild(wrap)
-
-    const pad = new HandwritingPad(padDiv, { h: 140, clearable: true })
-
-    cancelBtn.onclick = () => wrap.remove()
-    saveBtn.onclick = async () => {
-      const drawing = pad.toDataURL()
-      if (!drawing) {
-        const fallback = prompt('Escreva com a caneta ou digite aqui:')
-        if (!fallback || !fallback.trim()) { toast('Tarefa em branco'); return }
-        const { error } = await supabase.from('tasks').insert({
-          user_id: userId, task_date: selectedDate,
-          period, title: fallback.trim(), status: 'pending'
-        })
-        if (error) { toast('Erro: '+error.message); return }
-        toast('Tarefa adicionada!')
-        wrap.remove()
-        await loadDayTasks(selectedDate)
-        return
-      }
-      const { error } = await supabase.from('tasks').insert({
-          user_id: userId, task_date: selectedDate,
-          period, drawing, title: '', status: 'pending'
-        })
-        if (error) { toast('Erro: '+error.message); return }
-        toast('Tarefa adicionada!')
-      wrap.remove()
-      await loadDayTasks(selectedDate)
-    }
+  $('day-save').onclick = async () => {
+    const drawing = dayPadInstance.toDataURL()
+    if (!drawing) { toast('Escreva algo com a caneta'); return }
+    const period = $('day-period').value
+    const { error } = await supabase.from('tasks').insert({
+      user_id: userId, task_date: selectedDate,
+      period, drawing, title: '', status: 'pending'
+    })
+    if (error) { toast('Erro: '+error.message); return }
+    toast('Tarefa adicionada!')
+    dayPadInstance.clear()
+    await loadDayTasks(selectedDate)
   }
 }
 
@@ -605,18 +559,28 @@ function renderApp() {
           <button id="back-to-cal" class="back-btn"><span class="material-symbols-outlined" style="font-size:20px">arrow_back</span> Voltar</button>
           <span id="day-date" class="date-title" style="font-size:17px;font-weight:600"></span>
         </div>
-        <div style="flex:1;overflow-y:auto;padding:8px 0" class="day-view">
+        <div style="flex:1;overflow-y:auto;padding:4px 0" class="day-view">
           ${['manha','tarde','noite'].map(p => `
             <div class="period-section">
               <div class="period-header ${p}">
                 <span class="period-title ${p}">${PERIOD_ICON[p]} ${PERIOD_LABEL[p]}</span>
-                <button id="add-btn-${p}" class="back-btn" style="font-size:13px;font-weight:600;color:${PERIOD_COLOR[p]}">
-                  <span class="material-symbols-outlined" style="font-size:18px">add</span> Escrever
-                </button>
               </div>
               <div id="tasks-${p}"><div class="empty-state">Nenhuma tarefa</div></div>
             </div>
           `).join('')}
+        </div>
+        <!-- Writing area fixed at bottom -->
+        <div style="border-top:1px solid #e0e0e2;background:#fff;padding:8px 12px 12px;flex-shrink:0">
+          <div style="font-size:13px;font-weight:600;color:#b7006f;margin-bottom:6px">✏️ Escreva um compromisso</div>
+          <div id="day-pad" style="margin-bottom:6px"></div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <select id="day-period" style="font-size:13px;padding:6px 10px;border:1px solid #d0d0d2;border-radius:6px;background:#fff;flex:1">
+              <option value="manha">🌅 Manha</option>
+              <option value="tarde">☀️ Tarde</option>
+              <option value="noite">🌙 Noite</option>
+            </select>
+            <button id="day-save" style="padding:7px 20px;background:#b7006f;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer">Salvar</button>
+          </div>
         </div>
       </div>
 
@@ -629,7 +593,7 @@ function renderApp() {
   $('today-btn').onclick = () => { const d=new Date(); curMonth=d.getMonth(); curYear=d.getFullYear(); renderCalendar() }
   $('back-to-cal').onclick = backToCalendar
 
-  for (const p of ['manha','tarde','noite']) setupAddTask(p)
+  setupDayPad()
 
   loadAll().then(() => { renderCalendar(); renderTodayTasks() })
 }
