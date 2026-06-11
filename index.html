@@ -212,10 +212,10 @@ class HandwritingPad {
     e.preventDefault()
     this._drawing = true
     this._drawn = true
-    const p = this._p(e)
+    const x = e.offsetX, y = e.offsetY
     const ctx = this.ctx
     ctx.beginPath()
-    ctx.moveTo(p.x * this.dpr, p.y * this.dpr)
+    ctx.moveTo(x * this.dpr, y * this.dpr)
     if (this._eraser) {
       ctx.strokeStyle = '#fcfdff'
       ctx.lineWidth = this.ERASER_SIZE * this.dpr
@@ -225,16 +225,16 @@ class HandwritingPad {
     }
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
-    this._lastP = p
+    this._lastX = x; this._lastY = y
   }
   _m(e) {
     if (!this._drawing) return
     e.preventDefault()
-    const p = this._p(e)
+    const x = e.offsetX, y = e.offsetY
     const ctx = this.ctx
     ctx.beginPath()
-    ctx.moveTo(this._lastP.x * this.dpr, this._lastP.y * this.dpr)
-    ctx.lineTo(p.x * this.dpr, p.y * this.dpr)
+    ctx.moveTo(this._lastX * this.dpr, this._lastY * this.dpr)
+    ctx.lineTo(x * this.dpr, y * this.dpr)
     if (this._eraser) {
       ctx.strokeStyle = '#fcfdff'
       ctx.lineWidth = this.ERASER_SIZE * this.dpr
@@ -245,10 +245,17 @@ class HandwritingPad {
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
     ctx.stroke()
-    this._lastP = p
+    this._lastX = x; this._lastY = y
   }
   _e(e) { if (!this._drawing) return; this._drawing = false }
-  _p(e) { const r = this.ca.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top } }
+  _resize() {
+    const r = this.c.getBoundingClientRect()
+    this.ca.width = r.width * this.dpr
+    this.ca.height = this.h * this.dpr
+    this.ca.style.height = this.h + 'px'
+    this.ca.style.width = r.width + 'px'
+    this.w = r.width
+  }
   toDataURL() { return this._drawn ? this.ca.toDataURL('image/png') : '' }
   clear() { this._drawn = false; this._drawBg() }
   load(d) {
