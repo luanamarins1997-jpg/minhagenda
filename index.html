@@ -472,7 +472,7 @@ function setupAddTask(period) {
     if (container.querySelector('.empty-state')) container.innerHTML = ''
     container.appendChild(wrap)
 
-    const pad = new HandwritingPad(padDiv, { h: 80, clearable: true })
+    const pad = new HandwritingPad(padDiv, { h: 140, clearable: true })
 
     cancelBtn.onclick = () => wrap.remove()
     saveBtn.onclick = async () => {
@@ -539,7 +539,7 @@ async function editTask(id, date, fromHome) {
   wrap.appendChild(body)
 
   container.prepend(wrap)
-  const pad = new HandwritingPad(padDiv, { h: 80, clearable: true })
+  const pad = new HandwritingPad(padDiv, { h: 140, clearable: true })
   if (task.drawing) pad.load(task.drawing)
 
   cancelBtn.onclick = () => wrap.remove()
