@@ -224,7 +224,7 @@ class HandwritingPad {
       ctx.lineWidth = this.ERASER_SIZE
     } else {
       ctx.strokeStyle = '#1b1c1d'
-      ctx.lineWidth = (e.pressure > 0 ? e.pressure * this._lineW * 2 : this._lineW)
+      ctx.lineWidth = this._lineW
     }
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
@@ -243,7 +243,7 @@ class HandwritingPad {
       ctx.lineWidth = this.ERASER_SIZE
     } else {
       ctx.strokeStyle = '#1b1c1d'
-      ctx.lineWidth = (e.pressure > 0 ? e.pressure * this._lineW * 2 : this._lineW)
+      ctx.lineWidth = this._lineW
     }
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
