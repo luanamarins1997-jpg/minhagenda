@@ -106,6 +106,7 @@ let curMonth = new Date().getMonth()
 let curYear = new Date().getFullYear()
 let allTasks = []
 let dayTasks = []
+let allCommitments = {}
 let selectedDate = ''
 
 const $ = id => document.getElementById(id)
@@ -298,10 +299,12 @@ function renderCalendar() {
     const ds = `${curYear}-${String(curMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`
     const td = allTasks.filter(t => t.task_date === ds)
     const tem = { manha: td.some(t=>t.period==='manha'), tarde: td.some(t=>t.period==='tarde'), noite: td.some(t=>t.period==='noite') }
+    const compromisso = allCommitments[ds]
     html += `<div class="cal-cell ${ehHoje?'today':''}" data-date="${ds}">
       <div class="cal-num ${ehHoje?'today':''}">${d}</div>
-      ${td.slice(0,3).map(t => t.drawing ? `<img src="${t.drawing}" style="max-height:16px;width:auto;display:block;margin-top:1px;border-radius:1px">` : `<span style="font-size:10px;color:#555;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">${t.title||''}</span>`).join('')}
-      ${td.length > 3 ? `<span style="font-size:10px;color:#999">+${td.length-3}</span>` : ''}
+      ${compromisso ? `<img src="${compromisso}" style="max-height:28px;width:auto;display:block;margin-top:1px;border-radius:2px;border:1px solid #e0e0e2">` : ''}
+      ${td.slice(0,2).map(t => t.drawing ? `<img src="${t.drawing}" style="max-height:14px;width:auto;display:block;margin-top:1px;border-radius:1px">` : `<span style="font-size:9px;color:#555;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">${t.title||''}</span>`).join('')}
+      ${td.length > 2 ? `<span style="font-size:9px;color:#999">+${td.length-2}</span>` : ''}
     </div>`
   }
 
@@ -391,6 +394,7 @@ async function loadDayTasks(date) {
   const { data, error } = await supabase.from('tasks').select('*')
     .eq('user_id', userId).eq('task_date', date).order('created_at')
   if (!error && data) dayTasks = data; else dayTasks = []
+  loadCommitForDay(date)
 
   for (const p of ['manha','tarde','noite']) {
     const container = $(`tasks-${p}`)
@@ -434,26 +438,76 @@ async function loadDayTasks(date) {
   }
 }
 
-// =============== DAY PAD (Quick Write) ===============
-let dayPadInstance = null
+// =============== ADD TASK (per period) ===============
+function setupAddTask(period) {
+  const btn = $(`add-btn-${period}`)
+  if (!btn) return
+  btn.onclick = () => {
+    const container = $(`tasks-${period}`)
+    if ($('inline-task-pad')) return
+    const wrap = document.createElement('div')
+    wrap.id = 'inline-task-pad'
+    wrap.style.cssText = 'border:1px solid #d0d0d2;border-radius:6px;margin:4px;padding:4px;background:#fff'
+    const padDiv = document.createElement('div')
+    padDiv.style.cssText = 'height:60px'
+    wrap.appendChild(padDiv)
+    const actions = document.createElement('div')
+    actions.style.cssText = 'display:flex;gap:4px;justify-content:flex-end;margin-top:4px'
+    actions.innerHTML = `<button class="task-cancel" style="padding:4px 10px;border:none;border-radius:4px;cursor:pointer;font-size:11px;color:#666;background:#f0f0f2">Cancelar</button><button class="task-save" style="padding:4px 12px;background:#b7006f;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600">Salvar</button>`
+    wrap.appendChild(actions)
+    if (container.querySelector('.empty-state')) container.innerHTML = ''
+    container.prepend(wrap)
+
+    const pad = new HandwritingPad(padDiv, { h: 60, clearable: true })
+    wrap.querySelector('.task-cancel').onclick = () => wrap.remove()
+    wrap.querySelector('.task-save').onclick = async () => {
+      const drawing = pad.toDataURL()
+      if (!drawing) { toast('Escreva algo'); return }
+      await supabase.from('tasks').insert({ user_id: userId, task_date: selectedDate, period, drawing, title: '', status: 'pending' })
+      toast('Tarefa adicionada!')
+      wrap.remove()
+      await loadDayTasks(selectedDate)
+    }
+  }
+}
+
+// =============== COMPROMISSO ===============
+let commitPad = null
 
 function setupDayPad() {
-  if (!$('day-pad')) return
-  dayPadInstance = new HandwritingPad($('day-pad'), { h: 100, clearable: true })
+  if (!$('commit-pad')) return
+  commitPad = new HandwritingPad($('commit-pad'), { h: 100, clearable: true })
 
-  $('day-save').onclick = async () => {
-    const drawing = dayPadInstance.toDataURL()
-    if (!drawing) { toast('Escreva algo com a caneta'); return }
-    const period = $('day-period').value
-    const { error } = await supabase.from('tasks').insert({
-      user_id: userId, task_date: selectedDate,
-      period, drawing, title: '', status: 'pending'
-    })
+  $('commit-save').onclick = async () => {
+    const drawing = commitPad.toDataURL()
+    if (!drawing) { toast('Escreva o compromisso com a caneta'); return }
+    const { error } = await supabase.from('commitments').upsert({
+      user_id: userId, commit_date: selectedDate, drawing
+    }, { onConflict: 'commit_date' })
     if (error) { toast('Erro: '+error.message); return }
-    toast('Tarefa adicionada!')
-    dayPadInstance.clear()
+    toast('Compromisso salvo!')
+    commitPad.clear()
+    await loadAll()
+    renderCalendar()
+    renderTodayTasks()
     await loadDayTasks(selectedDate)
+    loadCommitForDay(selectedDate)
   }
+
+  $('commit-clear').onclick = async () => {
+    commitPad.clear()
+    await supabase.from('commitments').delete().eq('user_id', userId).eq('commit_date', selectedDate)
+    delete allCommitments[selectedDate]
+    renderCalendar()
+    loadCommitForDay(selectedDate)
+  }
+}
+
+async function loadCommitForDay(date) {
+  if (!commitPad) return
+  commitPad.clear()
+  const drawing = allCommitments[date]
+  if (drawing) commitPad.load(drawing)
 }
 
 // =============== EDIT / DELETE TASK ===============
@@ -564,22 +618,23 @@ function renderApp() {
             <div class="period-section">
               <div class="period-header ${p}">
                 <span class="period-title ${p}">${PERIOD_ICON[p]} ${PERIOD_LABEL[p]}</span>
+                <button id="add-btn-${p}" class="back-btn" style="font-size:13px;font-weight:600;color:${PERIOD_COLOR[p]}">
+                  <span class="material-symbols-outlined" style="font-size:18px">add</span> Escrever
+                </button>
               </div>
               <div id="tasks-${p}"><div class="empty-state">Nenhuma tarefa</div></div>
             </div>
           `).join('')}
         </div>
-        <!-- Writing area fixed at bottom -->
+        <!-- Compromisso area fixed at bottom -->
         <div style="border-top:1px solid #e0e0e2;background:#fff;padding:8px 12px 12px;flex-shrink:0">
-          <div style="font-size:13px;font-weight:600;color:#b7006f;margin-bottom:6px">✏️ Escreva um compromisso</div>
-          <div id="day-pad" style="margin-bottom:6px"></div>
-          <div style="display:flex;gap:6px;align-items:center">
-            <select id="day-period" style="font-size:13px;padding:6px 10px;border:1px solid #d0d0d2;border-radius:6px;background:#fff;flex:1">
-              <option value="manha">🌅 Manha</option>
-              <option value="tarde">☀️ Tarde</option>
-              <option value="noite">🌙 Noite</option>
-            </select>
-            <button id="day-save" style="padding:7px 20px;background:#b7006f;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer">Salvar</button>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <span style="font-size:13px;font-weight:700;color:#1b1c1d">📌 Compromisso</span>
+            <button id="commit-clear" class="back-btn" style="font-size:11px;color:#999">Limpar</button>
+          </div>
+          <div id="commit-pad" style="margin-bottom:6px"></div>
+          <div style="display:flex;gap:6px;align-items:center;justify-content:flex-end">
+            <button id="commit-save" style="padding:7px 20px;background:#b7006f;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer">Salvar Compromisso</button>
           </div>
         </div>
       </div>
@@ -593,6 +648,7 @@ function renderApp() {
   $('today-btn').onclick = () => { const d=new Date(); curMonth=d.getMonth(); curYear=d.getFullYear(); renderCalendar() }
   $('back-to-cal').onclick = backToCalendar
 
+  for (const p of ['manha','tarde','noite']) setupAddTask(p)
   setupDayPad()
 
   loadAll().then(() => { renderCalendar(); renderTodayTasks() })
@@ -602,6 +658,8 @@ async function loadAll() {
   if (!userId) return
   const { data, error } = await supabase.from('tasks').select('*').eq('user_id', userId).order('task_date')
   if (!error && data) allTasks = data; else allTasks = []
+  const { data: cd, error: ce } = await supabase.from('commitments').select('*').eq('user_id', userId)
+  if (!ce && cd) { allCommitments = {}; cd.forEach(c => { allCommitments[c.commit_date] = c.drawing }) }
 }
 
 // =============== INIT ===============

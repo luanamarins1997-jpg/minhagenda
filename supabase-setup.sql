@@ -38,3 +38,17 @@ DROP TABLE IF EXISTS events CASCADE;
 ALTER TABLE tasks ALTER COLUMN title DROP NOT NULL;
 ALTER TABLE tasks ALTER COLUMN title SET DEFAULT '';
 ALTER TABLE tasks ADD COLUMN IF NOT EXISTS title TEXT DEFAULT '';
+
+-- Tabela de compromissos (um por dia)
+CREATE TABLE IF NOT EXISTS commitments (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  commit_date DATE NOT NULL UNIQUE,
+  drawing TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE commitments ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Usuarios podem ver compromissos" ON commitments FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Usuarios podem criar compromissos" ON commitments FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Usuarios podem atualizar compromissos" ON commitments FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Usuarios podem excluir compromissos" ON commitments FOR DELETE USING (auth.uid() = user_id);
