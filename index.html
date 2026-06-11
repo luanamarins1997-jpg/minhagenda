@@ -371,7 +371,7 @@ async function showDayView(date) {
   $('view-title').textContent = 'Dia'
   $('calendar-view').style.display = 'none'
   $('day-view-wrap').style.display = 'flex'
-  loadDayTasks(date)
+  requestAnimationFrame(() => loadDayTasks(date))
 }
 
 function backToCalendar() {
@@ -471,8 +471,13 @@ function setupAddTask(period) {
 let commitPad = null
 
 function setupDayPad() {
-  if (!$('commit-pad')) return
-  commitPad = new HandwritingPad($('commit-pad'), { h: 100, clearable: true })
+  if (!$('commit-save')) return
+  // Sera criado quando o dia for aberto (lazy)
+}
+
+function initCommitPad() {
+  if (commitPad) return
+  commitPad = new HandwritingPad($('commit-pad'), { h: 100, clearable: true, toolbar: false })
 
   $('commit-save').onclick = async () => {
     const drawing = commitPad.toDataURL()
@@ -500,7 +505,7 @@ function setupDayPad() {
 }
 
 async function loadCommitForDay(date) {
-  if (!commitPad) return
+  if (!commitPad) { initCommitPad(); await new Promise(r => setTimeout(r, 50)) }
   commitPad.clear()
   const drawing = allCommitments[date]
   if (drawing) commitPad.load(drawing)
