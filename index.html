@@ -217,8 +217,6 @@ class HandwritingPad {
     this._drawn = true
     const p = this._p(e)
     const ctx = this.ctx
-    ctx.save()
-    ctx.scale(this.dpr, this.dpr)
     ctx.beginPath()
     ctx.moveTo(p.x, p.y)
     if (this._eraser) {
@@ -230,7 +228,6 @@ class HandwritingPad {
     }
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
-    ctx.restore()
     this._lastP = p
   }
   _m(e) {
@@ -238,8 +235,6 @@ class HandwritingPad {
     e.preventDefault()
     const p = this._p(e)
     const ctx = this.ctx
-    ctx.save()
-    ctx.scale(this.dpr, this.dpr)
     ctx.beginPath()
     ctx.moveTo(this._lastP.x, this._lastP.y)
     ctx.lineTo(p.x, p.y)
@@ -253,7 +248,6 @@ class HandwritingPad {
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
     ctx.stroke()
-    ctx.restore()
     this._lastP = p
   }
   _e(e) { if (!this._drawing) return; this._drawing = false }
