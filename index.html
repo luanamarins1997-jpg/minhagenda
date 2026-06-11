@@ -300,8 +300,8 @@ function renderCalendar() {
     const tem = { manha: td.some(t=>t.period==='manha'), tarde: td.some(t=>t.period==='tarde'), noite: td.some(t=>t.period==='noite') }
     html += `<div class="cal-cell ${ehHoje?'today':''}" data-date="${ds}">
       <div class="cal-num ${ehHoje?'today':''}">${d}</div>
-      ${td.slice(0,3).map(t => t.drawing ? `<img src="${t.drawing}" style="max-height:36px;width:auto;display:block;margin-top:2px;border-radius:2px">` : `<span style="font-size:11px;color:#555;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">${t.title||''}</span>`).join('')}
-      ${td.length > 3 ? `<span style="font-size:12px;color:#999;display:block;margin-top:2px">+${td.length-3}</span>` : ''}
+      ${td.slice(0,3).map(t => t.drawing ? `<img src="${t.drawing}" style="max-height:16px;width:auto;display:block;margin-top:1px;border-radius:1px">` : `<span style="font-size:10px;color:#555;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">${t.title||''}</span>`).join('')}
+      ${td.length > 3 ? `<span style="font-size:10px;color:#999">+${td.length-3}</span>` : ''}
     </div>`
   }
 
