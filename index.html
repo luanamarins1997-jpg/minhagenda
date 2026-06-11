@@ -28,7 +28,7 @@
   .cal-num { font-size:13px; font-weight:600; }
   .cal-num.today { color:#b7006f; }
 
-  .day-view { max-width:640px; margin:0 auto; padding:16px; }
+  .day-view { max-width:900px; margin:0 auto; padding:16px; }
   .period-section { margin-bottom:24px; }
   .period-header {
     display:flex; align-items:center; justify-content:space-between;
@@ -452,7 +452,7 @@ function setupAddTask(period) {
     wrap.className = 'inline-task-pad'
     wrap.style.cssText = 'border:1px solid #d0d0d2;border-radius:8px;margin:4px 0;padding:6px;background:#fff'
     const padDiv = document.createElement('div')
-    padDiv.style.cssText = 'height:100px'
+    padDiv.style.cssText = 'height:140px'
     wrap.appendChild(padDiv)
     const actions = document.createElement('div')
     actions.style.cssText = 'display:flex;gap:6px;justify-content:flex-end;margin-top:6px'
@@ -484,7 +484,7 @@ function setupDayPad() {
 
 function initCommitPad() {
   if (commitPad) { commitPad.wr.remove(); commitPad = null }
-  commitPad = new HandwritingPad($('commit-pad'), { h: 100, clearable: true, toolbar: false })
+  commitPad = new HandwritingPad($('commit-pad'), { h: 140, clearable: true, toolbar: false })
 
   $('commit-save').onclick = async () => {
     const drawing = commitPad.toDataURL()
@@ -640,7 +640,7 @@ function renderApp() {
             <span style="font-size:13px;font-weight:700;color:#1b1c1d">📌 Compromisso</span>
             <button id="commit-clear" class="back-btn" style="font-size:11px;color:#999">Limpar</button>
           </div>
-          <div id="commit-pad" style="margin-bottom:6px"></div>
+          <div id="commit-pad" style="margin-bottom:6px;min-height:140px"></div>
           <div style="display:flex;gap:6px;align-items:center;justify-content:flex-end">
             <button id="commit-save" style="padding:7px 20px;background:#b7006f;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer">Salvar Compromisso</button>
           </div>
