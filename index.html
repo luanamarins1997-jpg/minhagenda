@@ -116,6 +116,7 @@ class HandwritingPad {
   constructor(container, opts={}) {
     this.c = container; this.h = opts.h || 64; this._drawn = false
     this.dpr = window.devicePixelRatio || 1
+    this._lineW = opts.lineW || 2.5
     this.wr = document.createElement('div')
     this.wr.style.cssText = `position:relative;width:100%;height:${this.h}px;background:#fcfdff;border-radius:6px;overflow:hidden`
     this.ca = document.createElement('canvas'); this.ca.className = 'hpad'
@@ -145,38 +146,74 @@ class HandwritingPad {
   _resize() {
     const r = this.c.getBoundingClientRect()
     const w = r.width || 600
-    this.ca.width = w * this.dpr; this.ca.height = this.h * this.dpr
+    this.ca.width = w * this.dpr
+    this.ca.height = this.h * this.dpr
     this.ca.style.height = this.h + 'px'
+    this.w = w
     this.ctx.scale(this.dpr, this.dpr)
-    this.w = w; this.ha = this.h
   }
   _drawBg() {
     const ctx = this.ctx
-    ctx.save(); ctx.scale(1/this.dpr, 1/this.dpr)
-    ctx.fillStyle = '#fcfdff'; ctx.fillRect(0,0,this.ca.width,this.ca.height)
-    ctx.strokeStyle = '#e2e7ff'; ctx.lineWidth = 0.5
-    for (let y=16*this.dpr; y<this.ca.height; y+=16*this.dpr) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(this.ca.width,y); ctx.stroke() }
+    ctx.save()
+    ctx.setTransform(1, 0, 0, 1, 0, 0)
+    ctx.fillStyle = '#fcfdff'
+    ctx.fillRect(0, 0, this.ca.width, this.ca.height)
+    ctx.strokeStyle = '#e2e7ff'
+    ctx.lineWidth = 1
+    for (let y = 16 * this.dpr; y < this.ca.height; y += 16 * this.dpr) {
+      ctx.beginPath()
+      ctx.moveTo(0, y + 0.5)
+      ctx.lineTo(this.ca.width, y + 0.5)
+      ctx.stroke()
+    }
     ctx.restore()
   }
-  _s(e) { e.preventDefault(); this._drawing=true; this._drawn=true; if(this.cb)this.cb.style.opacity='1';
-    this.ctx.save(); this.ctx.scale(1/this.dpr,1/this.dpr);
-    const p=this._p(e); this.ctx.beginPath(); this.ctx.moveTo(p.x*this.dpr,p.y*this.dpr);
-    this.ctx.strokeStyle='#1b1c1d'; this.ctx.lineWidth=(e.pressure>0?e.pressure*5:2)*this.dpr
-    this.ctx.lineCap='round'; this.ctx.lineJoin='round'; this.ctx.restore()
+  _s(e) {
+    e.preventDefault()
+    this._drawing = true
+    this._drawn = true
+    if (this.cb) this.cb.style.opacity = '1'
+    const p = this._p(e)
+    const ctx = this.ctx
+    ctx.save()
+    ctx.scale(this.dpr, this.dpr)
+    ctx.beginPath()
+    ctx.moveTo(p.x, p.y)
+    ctx.strokeStyle = '#1b1c1d'
+    ctx.lineWidth = (e.pressure > 0 ? e.pressure * this._lineW * 2 : this._lineW)
+    ctx.lineCap = 'round'
+    ctx.lineJoin = 'round'
+    ctx.restore()
+    this._lastP = p
   }
-  _m(e) { if(!this._drawing)return; e.preventDefault();
-    const p=this._p(e), w=(e.pressure>0?e.pressure*5:2)
-    this.ctx.save(); this.ctx.scale(1/this.dpr,1/this.dpr)
-    this.ctx.strokeStyle='#1b1c1d'; this.ctx.lineWidth=w*this.dpr
-    this.ctx.lineCap='round'; this.ctx.lineJoin='round'
-    this.ctx.lineTo(p.x*this.dpr,p.y*this.dpr); this.ctx.stroke(); this.ctx.restore()
+  _m(e) {
+    if (!this._drawing) return
+    e.preventDefault()
+    const p = this._p(e)
+    const ctx = this.ctx
+    ctx.save()
+    ctx.scale(this.dpr, this.dpr)
+    ctx.beginPath()
+    ctx.moveTo(this._lastP.x, this._lastP.y)
+    ctx.lineTo(p.x, p.y)
+    ctx.strokeStyle = '#1b1c1d'
+    ctx.lineWidth = (e.pressure > 0 ? e.pressure * this._lineW * 2 : this._lineW)
+    ctx.lineCap = 'round'
+    ctx.lineJoin = 'round'
+    ctx.stroke()
+    ctx.restore()
+    this._lastP = p
   }
-  _e(e) { if(!this._drawing)return; this._drawing=false }
-  _p(e) { const r=this.ca.getBoundingClientRect(); return {x:e.clientX-r.left,y:e.clientY-r.top} }
+  _e(e) { if (!this._drawing) return; this._drawing = false }
+  _p(e) { const r = this.ca.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top } }
   toDataURL() { return this._drawn ? this.ca.toDataURL('image/png') : '' }
-  clear() { this._drawn=false; this._drawBg(); if(this.cb&&!this.wr.matches(':hover'))this.cb.style.opacity='0' }
-  load(d) { if(!d)return; const i=new Image(); i.onload=()=>{this._drawn=true;if(this.cb)this.cb.style.opacity='1';
-    this.ctx.save(); this.ctx.scale(1/this.dpr,1/this.dpr); this.ctx.drawImage(i,0,0,this.w,this.ha); this.ctx.restore()}; i.src=d }
+  clear() { this._drawn = false; this._drawBg(); if (this.cb && !this.wr.matches(':hover')) this.cb.style.opacity = '0' }
+  load(d) {
+    if (!d) return
+    const i = new Image()
+    i.onload = () => { this._drawn = true; if (this.cb) this.cb.style.opacity = '1'; this.ctx.drawImage(i, 0, 0, this.w, this.h) }
+    i.src = d
+  }
   isEmpty() { return !this._drawn }
 }
 
