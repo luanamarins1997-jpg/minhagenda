@@ -62,7 +62,7 @@
   .status-circle.done { background:#22c55e; border-color:#22c55e; color:#fff; }
   .status-circle.failed { background:#ef4444; border-color:#ef4444; color:#fff; }
 
-  .task-img { max-height:36px; width:auto; border-radius:3px; }
+  .task-img { border-radius:3px; }
 
   .add-area { padding:8px 12px; }
   .add-pad-wrap { border:2px dashed #d1d5db; border-radius:8px; padding:4px; background:#fcfdff; margin-bottom:8px; }
@@ -353,7 +353,7 @@ function renderTodayTasks() {
           <div class="task-row ${t.status}" style="cursor:default;padding:3px 6px;min-height:30px;border-radius:4px" data-id="${t.id}">
             <div class="status-circle ${t.status}" style="width:18px;height:18px;font-size:10px;border-width:1.5px" data-id="${t.id}">${STATUS_ICON[t.status]}</div>
             <div style="flex:1;min-width:0">
-              ${t.drawing ? `<img class="task-img" src="${t.drawing}" style="max-height:18px">` : `<span style="font-size:11px;color:#333">${t.title || ''}</span>`}
+              ${t.drawing ? `<img class="task-img" src="${t.drawing}" style="max-height:32px;width:100%;object-fit:contain">` : `<span style="font-size:11px;color:#333">${t.title || ''}</span>`}
             </div>
           </div>
         `).join('')}
