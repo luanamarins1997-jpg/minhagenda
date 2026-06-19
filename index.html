@@ -452,7 +452,7 @@ function setupAddTask(period) {
     wrap.className = 'inline-task-pad'
     wrap.style.cssText = 'border:1px solid #d0d0d2;border-radius:8px;margin:4px 0;padding:6px;background:#fff'
     const padDiv = document.createElement('div')
-    padDiv.style.cssText = 'height:140px'
+    padDiv.style.cssText = 'height:220px;width:100%'
     wrap.appendChild(padDiv)
     const actions = document.createElement('div')
     actions.style.cssText = 'display:flex;gap:6px;justify-content:flex-end;margin-top:6px'
@@ -461,7 +461,7 @@ function setupAddTask(period) {
     if (container.querySelector('.empty-state')) container.innerHTML = ''
     container.prepend(wrap)
 
-    const pad = new HandwritingPad(padDiv, { h: 100, clearable: true, toolbar: false })
+    const pad = new HandwritingPad(padDiv, { h: 220, clearable: true, toolbar: false })
     wrap.querySelector('.task-cancel').onclick = () => wrap.remove()
     wrap.querySelector('.task-save').onclick = async () => {
       const drawing = pad.toDataURL()
@@ -484,7 +484,7 @@ function setupDayPad() {
 
 function initCommitPad() {
   if (commitPad) { commitPad.wr.remove(); commitPad = null }
-  commitPad = new HandwritingPad($('commit-pad'), { h: 140, clearable: true, toolbar: false })
+  commitPad = new HandwritingPad($('commit-pad'), { h: 220, clearable: true, toolbar: false })
 
   $('commit-save').onclick = async () => {
     const drawing = commitPad.toDataURL()
@@ -555,7 +555,7 @@ async function editTask(id, date, fromHome) {
   wrap.appendChild(body)
 
   container.prepend(wrap)
-  const pad = new HandwritingPad(padDiv, { h: 140, clearable: true })
+  const pad = new HandwritingPad(padDiv, { h: 220, clearable: true })
   if (task.drawing) pad.load(task.drawing)
 
   cancelBtn.onclick = () => wrap.remove()
@@ -640,7 +640,7 @@ function renderApp() {
             <span style="font-size:13px;font-weight:700;color:#1b1c1d">📌 Compromisso</span>
             <button id="commit-clear" class="back-btn" style="font-size:11px;color:#999">Limpar</button>
           </div>
-          <div id="commit-pad" style="margin-bottom:6px;min-height:140px"></div>
+          <div id="commit-pad" style="margin-bottom:6px;min-height:220px;width:100%"></div>
           <div style="display:flex;gap:6px;align-items:center;justify-content:flex-end">
             <button id="commit-save" style="padding:7px 20px;background:#b7006f;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer">Salvar Compromisso</button>
           </div>
