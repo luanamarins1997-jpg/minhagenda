@@ -350,10 +350,10 @@ function renderTodayTasks() {
       <div style="margin-bottom:8px">
         <div style="font-size:11px;font-weight:700;color:${PERIOD_COLOR[p]};margin-bottom:2px;padding:0 4px">${PERIOD_ICON[p]} ${PERIOD_LABEL[p]}</div>
         ${lista.map(t => `
-          <div class="task-row ${t.status}" style="cursor:default;padding:3px 6px;min-height:30px;border-radius:4px" data-id="${t.id}">
-            <div class="status-circle ${t.status}" style="width:18px;height:18px;font-size:10px;border-width:1.5px" data-id="${t.id}">${STATUS_ICON[t.status]}</div>
+          <div class="task-row ${t.status}" style="cursor:default;padding:4px 6px;min-height:44px;border-radius:4px" data-id="${t.id}">
+            <div class="status-circle ${t.status}" style="width:22px;height:22px;font-size:12px;border-width:2px" data-id="${t.id}">${STATUS_ICON[t.status]}</div>
             <div style="flex:1;min-width:0">
-              ${t.drawing ? `<img class="task-img" src="${t.drawing}" style="max-height:18px">` : `<span style="font-size:11px;color:#333">${t.title || ''}</span>`}
+              ${t.drawing ? `<img class="task-img" src="${t.drawing}" style="max-height:32px">` : `<span style="font-size:13px;color:#333">${t.title || ''}</span>`}
             </div>
           </div>
         `).join('')}
@@ -409,7 +409,7 @@ async function loadDayTasks(date) {
         <div class="task-row ${t.status}" data-id="${t.id}">
           <div class="status-circle ${t.status}" data-id="${t.id}">${STATUS_ICON[t.status]}</div>
           <div style="flex:1;min-width:0">
-            ${t.drawing ? `<img class="task-img" src="${t.drawing}" draggable="false" style="max-height:32px">` : `<span style="font-size:14px;color:#333">${t.title || '(sem tarefa)'}</span>`}
+            ${t.drawing ? `<img class="task-img" src="${t.drawing}" draggable="false" style="max-height:64px;width:100%;object-fit:contain;border-radius:4px">` : `<span style="font-size:14px;color:#333">${t.title || '(sem tarefa)'}</span>`}
           </div>
           <div style="display:flex;gap:4px;flex-shrink:0">
             <button class="edit-task-btn" data-id="${t.id}" style="background:none;border:none;cursor:pointer;color:#666;padding:4px;border-radius:4px;font-size:14px" title="Editar">✏️</button>
