@@ -256,7 +256,19 @@ class HandwritingPad {
     this.ca.style.width = r.width + 'px'
     this.w = r.width
   }
-  toDataURL() { return this._drawn ? this.ca.toDataURL('image/png') : '' }
+  toDataURL(maxW) {
+    if (!this._drawn) return ''
+    maxW = maxW || 600
+    const w = this.ca.width, h = this.ca.height
+    if (w <= maxW * this.dpr) return this.ca.toDataURL('image/png')
+    const scale = (maxW * this.dpr) / w
+    const tw = Math.round(w * scale), th = Math.round(h * scale)
+    const tc = document.createElement('canvas')
+    tc.width = tw; tc.height = th
+    const tctx = tc.getContext('2d')
+    tctx.drawImage(this.ca, 0, 0, tw, th)
+    return tc.toDataURL('image/png')
+  }
   clear() { this._drawn = false; this._drawBg() }
   load(d) {
     if (!d) return
