@@ -5,702 +5,273 @@
 <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
 <title>Minha Agenda</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 </head>
 <body>
-
-<div id="app" style="min-height:100vh;color:#727782;display:flex;flex-direction:column">Carregando...</div>
-
+<div id="app" style="min-height:100vh;display:flex;flex-direction:column;color:#727782">Carregando...</div>
 <style>
-  * { box-sizing: border-box; }
-  body { font-family: 'Inter', sans-serif; background: #f5f5f7; margin: 0; }
-  .material-symbols-outlined { font-variation-settings:'FILL'0,'wght'400,'GRAD'0,'opsz'24; vertical-align:middle; }
-
-  .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
-  .cal-cell {
-    background:#fff; padding:4px 5px; cursor:pointer; border-radius:4px;
-    transition:background 0.15s; position:relative; overflow:hidden;
-  }
-  .cal-cell:hover { background:#f0f0f2; }
-  .cal-cell.today { background:#fdf2f8; }
-  .cal-cell.other { opacity:0.3; }
-  .cal-num { font-size:13px; font-weight:600; }
-  .cal-num.today { color:#b7006f; }
-
-  .day-view { max-width:1450px; margin:0 auto; padding:16px; }
-  .period-section { margin-bottom:24px; }
-  .period-header {
-    display:flex; align-items:center; justify-content:space-between;
-    padding:8px 12px; border-radius:8px; margin-bottom:8px;
-  }
-  .period-header.manha { background:#fdf2f8; }
-  .period-header.tarde { background:#fff7ed; }
-  .period-header.noite { background:#eff6ff; }
-  .period-title { font-size:15px; font-weight:700; letter-spacing:0.5px; }
-  .period-title.manha { color:#b7006f; }
-  .period-title.tarde { color:#e67e22; }
-  .period-title.noite { color:#3b82f6; }
-
-  .task-row {
-    display:flex; align-items:center; gap:10px; padding:6px 12px; min-height:52px;
-    border-bottom:1px solid #f0f0f2; transition:background 0.15s; cursor:pointer;
-  }
-  .task-row:last-child { border-bottom:none; }
-  .task-row:hover { background:#fafafa; }
-  .task-row.done { opacity:0.5; }
-  .task-row.failed { opacity:0.6; }
-  .task-row.failed .task-img { filter:grayscale(0.6); }
-
-  .status-circle {
-    width:28px; height:28px; border-radius:50%; flex-shrink:0;
-    display:flex; align-items:center; justify-content:center;
-    font-size:16px; font-weight:700; transition:all 0.2s;
-    border:2px solid #ccc; cursor:pointer;
-  }
-  .status-circle.pending { border-color:#ccc; color:transparent; }
-  .status-circle.done { background:#22c55e; border-color:#22c55e; color:#fff; }
-  .status-circle.failed { background:#ef4444; border-color:#ef4444; color:#fff; }
-
-  .task-img { max-height:36px; width:auto; border-radius:3px; }
-
-  .add-area { padding:8px 12px; }
-  .add-pad-wrap { border:2px dashed #d1d5db; border-radius:8px; padding:4px; background:#fcfdff; margin-bottom:8px; }
-  .add-actions { display:flex; gap:8px; justify-content:flex-end; }
-
-  .back-btn {
-    display:inline-flex; align-items:center; gap:4px; padding:6px 12px;
-    background:transparent; border:none; cursor:pointer; font-size:14px; font-weight:500;
-    color:#666; border-radius:8px; transition:background 0.15s;
-  }
-  .back-btn:hover { background:#e8e8ec; }
-
-  .date-title { font-size:22px; font-weight:700; color:#1b1c1d; }
-  .empty-state { text-align:center; padding:16px; color:#999; font-size:14px; }
-
-  /* Canvas handwriting pad */
-  .hpad { touch-action:none; cursor:crosshair; display:block; border-radius:6px; width:100%; }
-
-  #toast {
-    position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
-    background:#1b1c1d; color:#fff; padding:10px 20px; border-radius:10px;
-    font-size:13px; z-index:999; opacity:0; transition:opacity 0.3s; pointer-events:none;
-  }
-  #toast.show { opacity:1; }
-
-  @media (max-width:640px) {
-    .cal-cell { padding:2px 3px; }
-    .cal-num { font-size:11px; }
-  }
+* { box-sizing:border-box; }
+body { margin:0; font-family:'Inter',sans-serif; background:#f5f5f7; -webkit-user-select:none; user-select:none; }
+.material-symbols-outlined { font-variation-settings:'FILL'0,'wght'400,'GRAD'0,'opsz'24; vertical-align:middle; }
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;flex:1;padding:3px 6px 6px;overflow-y:auto}
+.cel{background:#fff;padding:3px 4px;cursor:pointer;border-radius:3px;overflow:hidden;position:relative;display:flex;flex-direction:column}
+.cel:hover{background:#f8f8fa}
+.cel.today{background:#fdf2f8}
+.cel.other{opacity:0.3}
+.cel-num{font-size:11px;font-weight:600;flex-shrink:0}
+.cel-num.today{color:#b7006f}
+.cel-img{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-top:1px}
+.cel-img img{max-height:100%;max-width:100%;border-radius:2px;object-fit:contain}
+.day-header{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:#fff;border-bottom:1px solid #eee}
+.day-b {display:inline-flex;align-items:center;gap:4px;padding:5px 10px;background:transparent;border:none;cursor:pointer;font-size:13px;font-weight:500;color:#666;border-radius:6px;transition:background.15s}
+.day-b:hover{background:#eee}
+.psec{margin-bottom:16px}
+.ph{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;border-radius:6px;margin-bottom:4px}
+.ph.m{background:#fdf2f8;color:#b7006f}
+.ph.t{background:#fff7ed;color:#e67e22}
+.ph.n{background:#eff6ff;color:#3b82f6}
+.ph-c{font-size:13px;font-weight:700}
+.trow{display:flex;align-items:center;gap:8px;padding:4px 12px;min-height:38px;border-bottom:1px solid #f3f3f5}
+.trow:last-child{border-bottom:none}
+.trow.done{opacity:0.5}
+.trow.failed{opacity:0.6}
+.sc{width:22px;height:22px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;border:2px solid #ccc;cursor:pointer;transition:all.2s}
+.sc.pending{border-color:#ccc;color:transparent}
+.sc.done{background:#22c55e;border-color:#22c55e;color:#fff}
+.sc.failed{background:#ef4444;border-color:#ef4444;color:#fff}
+.timg{max-height:40px;width:auto;border-radius:3px}
+.hpad{touch-action:none;cursor:crosshair;display:block;border-radius:6px;width:100%}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1b1c1d;color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;z-index:999;opacity:0;transition:opacity.3s;pointer-events:none}
+#toast.show{opacity:1}
 </style>
-
 <script type="module">
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
+import{createClient}from'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
+const S='https://pftjojkgzgthayfabhhf.supabase.co',A='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmdGpvamtnemd0aGF5ZmFiaGhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNDE5MjcsImV4cCI6MjA5NjYxNzkyN30.CfqAZjKmiDexilbRMMRWl54-UZPVGz9Abu3tXpaQ0y4'
+const sb=createClient(S,A)
+let uid=null,cm=(new Date).getMonth(),cy=(new Date).getFullYear(),alT=[],alC={},slD='',tp={}
+const $=id=>document.getElementById(id),to=m=>{const t=$('toast');if(!t)return;t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2000)}
+const SN={pending:'done',done:'failed',failed:'pending'},SI={pending:'',done:'\u2713',failed:'\u2717'}
+const PI={manha:'\u{1F305}',tarde:'\u2600\uFE0F',noite:'\u{1F319}'},PL={manha:'MANHA',tarde:'TARDE',noite:'NOITE'},PC={manha:'#b7006f',tarde:'#e67e22',noite:'#3b82f6'}
+function ds(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function fd(d){const m=['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'],w=['Domingo','Segunda','Terca','Quarta','Quinta','Sexta','Sabado'];return w[d.getDay()]+', '+d.getDate()+' de '+m[d.getMonth()]}
 
-const SUPABASE_URL = 'https://pftjojkgzgthayfabhhf.supabase.co'
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmdGpvamtnemd0aGF5ZmFiaGhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNDE5MjcsImV4cCI6MjA5NjYxNzkyN30.CfqAZjKmiDexilbRMMRWl54-UZPVGz9Abu3tXpaQ0y4'
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-
-let userId = null
-let curMonth = new Date().getMonth()
-let curYear = new Date().getFullYear()
-let allTasks = []
-let dayTasks = []
-let allCommitments = {}
-let selectedDate = ''
-
-const $ = id => document.getElementById(id)
-const toast = msg => { const t = $('toast'); if (!t) return; t.textContent = msg; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2000) }
-
-// =============== HANDWRITING PAD ===============
-class HandwritingPad {
-  constructor(container, opts={}) {
-    this.c = container; this.h = opts.h || 64; this._drawn = false
-    this.dpr = window.devicePixelRatio || 1
-    this._lineW = opts.lineW || 2.5
-    this._eraser = false
-    this._toolbar = opts.toolbar !== false
-    this.ERASER_SIZE = 18
-
-    this.wr = document.createElement('div')
-    this.wr.style.cssText = `position:relative;width:100%;background:#fcfdff;border-radius:6px;overflow:hidden`
-
-    // Toolbar
-    if (this._toolbar) {
-      this.tb = document.createElement('div')
-      this.tb.style.cssText = 'display:flex;gap:4px;padding:4px 6px;border-bottom:1px solid #e5e7eb;background:#fafafa;align-items:center'
-      this._penBtn = this._tbBtn('edit', 'Caneta', true)
-      this._eraserBtn = this._tbBtn('auto_fix_high', 'Borracha', false)
-      this.tb.appendChild(this._penBtn)
-      this.tb.appendChild(this._eraserBtn)
-      this._penBtn.onclick = () => this.setMode('pen')
-      this._eraserBtn.onclick = () => this.setMode('eraser')
-
-      const spacer = document.createElement('div')
-      spacer.style.cssText = 'flex:1'
-      this.tb.appendChild(spacer)
-
-      this._clearBtn = this._tbBtn('delete', 'Limpar', false)
-      this._clearBtn.onclick = () => { if (this._drawn) { this.clear(); this._onChange() } }
-      this.tb.appendChild(this._clearBtn)
-
-      this.wr.appendChild(this.tb)
-    }
-
-    this.canvasWrap = document.createElement('div')
-    this.canvasWrap.style.cssText = `width:100%;height:${this.h}px;position:relative`
-    this.ca = document.createElement('canvas'); this.ca.className = 'hpad'
-    this.ctx = this.ca.getContext('2d')
-    this._resize()
-    this._drawBg()
-    this.canvasWrap.appendChild(this.ca)
-    this.wr.appendChild(this.canvasWrap)
-    container.appendChild(this.wr)
-
-    this._drawing = false
-    this.ca.addEventListener('pointerdown', e => this._s(e))
-    this.ca.addEventListener('pointermove', e => this._m(e))
-    this.ca.addEventListener('pointerup', e => this._e(e))
-    this.ca.addEventListener('pointerleave', e => this._e(e))
-    this.ca.addEventListener('pointercancel', e => this._e(e))
-    this.ca.style.touchAction = 'none'
+// Handwriting Pad
+class HP{
+  constructor(cn,op={}){
+    this.c=cn;this.h=op.h||100;this._d=false;this.dpr=window.devicePixelRatio||1;this._lw=op.lw||2.5;this._er=false;this.ES=18
+    this.wr=document.createElement('div');this.wr.style.cssText='position:relative;width:100%;background:#fcfdff;border-radius:6px;overflow:hidden'
+    if(op.tb!==false){this.tb=document.createElement('div');this.tb.style.cssText='display:flex;gap:3px;padding:3px 6px;border-bottom:1px solid #eee;background:#fafafa;align-items:center'
+    this._pb=this._tb('edit','Caneta',true);this._eb=this._tb('auto_fix_high','Borracha',false);this.tb.appendChild(this._pb);this.tb.appendChild(this._eb)
+    this._pb.onclick=()=>this.sm('pen');this._eb.onclick=()=>this.sm('eraser')
+    const sp=document.createElement('div');sp.style.cssText='flex:1';this.tb.appendChild(sp)
+    this._cl=this._tb('delete','Limpar',false);this._cl.onclick=()=>{if(this._d){this.clear();this._ch()}};this.tb.appendChild(this._cl);this.wr.appendChild(this.tb)}
+    this.cw=document.createElement('div');this.cw.style.cssText=`width:100%;height:${this.h}px;position:relative`
+    this.ca=document.createElement('canvas');this.ca.className='hpad';this.ctx=this.ca.getContext('2d')
+    this._rs();this._dbg();this.cw.appendChild(this.ca);this.wr.appendChild(this.cw);cn.appendChild(this.wr)
+    this._dr=false;this.ca.addEventListener('pointerdown',e=>this._s(e));this.ca.addEventListener('pointermove',e=>this._m(e))
+    this.ca.addEventListener('pointerup',e=>this._e(e));this.ca.addEventListener('pointerleave',e=>this._e(e));this.ca.addEventListener('pointercancel',e=>this._e(e));this.ca.style.touchAction='none'
   }
-
-  _tbBtn(icon, label, active) {
-    const b = document.createElement('button')
-    b.type = 'button'
-    b.innerHTML = `<span class="material-symbols-outlined" style="font-size:18px">${icon}</span>`
-    b.style.cssText = `display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:6px;border:none;cursor:pointer;background:${active?'#b7006f':'transparent'};color:${active?'#fff':'#666'};transition:all 0.15s`
-    b.title = label
-    return b
-  }
-
-  setMode(mode) {
-    this._eraser = mode === 'eraser'
-    this._penBtn.style.background = this._eraser ? 'transparent' : '#b7006f'
-    this._penBtn.style.color = this._eraser ? '#666' : '#fff'
-    this._eraserBtn.style.background = this._eraser ? '#b7006f' : 'transparent'
-    this._eraserBtn.style.color = this._eraser ? '#fff' : '#666'
-    this.ca.style.cursor = this._eraser ? 'cell' : 'crosshair'
-    this._onChange()
-  }
-
-  _onChange() {}
-
-  _resize() {
-    const r = this.c.getBoundingClientRect()
-    const w = r.width || 600
-    this.ca.width = w * this.dpr
-    this.ca.height = this.h * this.dpr
-    this.ca.style.height = this.h + 'px'
-    this.w = w
-  }
-  _drawBg() {
-    const ctx = this.ctx
-    ctx.fillStyle = '#fcfdff'
-    ctx.fillRect(0, 0, this.ca.width, this.ca.height)
-    ctx.strokeStyle = '#e2e7ff'
-    ctx.lineWidth = 1
-    for (let y = 16 * this.dpr; y < this.ca.height; y += 16 * this.dpr) {
-      ctx.beginPath()
-      ctx.moveTo(0, y + 0.5)
-      ctx.lineTo(this.ca.width, y + 0.5)
-      ctx.stroke()
-    }
-  }
-  _s(e) {
-    e.preventDefault()
-    this._drawing = true
-    this._drawn = true
-    const x = e.offsetX, y = e.offsetY
-    const ctx = this.ctx
-    ctx.beginPath()
-    ctx.moveTo(x * this.dpr, y * this.dpr)
-    if (this._eraser) {
-      ctx.strokeStyle = '#fcfdff'
-      ctx.lineWidth = this.ERASER_SIZE * this.dpr
-    } else {
-      ctx.strokeStyle = '#1b1c1d'
-      ctx.lineWidth = this._lineW * this.dpr
-    }
-    ctx.lineCap = 'round'
-    ctx.lineJoin = 'round'
-    this._lastX = x; this._lastY = y
-  }
-  _m(e) {
-    if (!this._drawing) return
-    e.preventDefault()
-    const x = e.offsetX, y = e.offsetY
-    const ctx = this.ctx
-    ctx.beginPath()
-    ctx.moveTo(this._lastX * this.dpr, this._lastY * this.dpr)
-    ctx.lineTo(x * this.dpr, y * this.dpr)
-    if (this._eraser) {
-      ctx.strokeStyle = '#fcfdff'
-      ctx.lineWidth = this.ERASER_SIZE * this.dpr
-    } else {
-      ctx.strokeStyle = '#1b1c1d'
-      ctx.lineWidth = this._lineW * this.dpr
-    }
-    ctx.lineCap = 'round'
-    ctx.lineJoin = 'round'
-    ctx.stroke()
-    this._lastX = x; this._lastY = y
-  }
-  _e(e) { if (!this._drawing) return; this._drawing = false }
-  _resize() {
-    const r = this.c.getBoundingClientRect()
-    this.ca.width = r.width * this.dpr
-    this.ca.height = this.h * this.dpr
-    this.ca.style.height = this.h + 'px'
-    this.ca.style.width = r.width + 'px'
-    this.w = r.width
-  }
-  toDataURL(maxW) {
-    if (!this._drawn) return ''
-    maxW = maxW || 600
-    const w = this.ca.width, h = this.ca.height
-    if (w <= maxW * this.dpr) return this.ca.toDataURL('image/png')
-    const scale = (maxW * this.dpr) / w
-    const tw = Math.round(w * scale), th = Math.round(h * scale)
-    const tc = document.createElement('canvas')
-    tc.width = tw; tc.height = th
-    const tctx = tc.getContext('2d')
-    tctx.drawImage(this.ca, 0, 0, tw, th)
-    return tc.toDataURL('image/png')
-  }
-  clear() { this._drawn = false; this._drawBg() }
-  load(d) {
-    if (!d) return
-    this._drawn = true
-    const i = new Image()
-    i.onload = () => { this.ctx.drawImage(i, 0, 0, this.ca.width, this.ca.height) }
-    i.src = d
-  }
-  isEmpty() { return !this._drawn }
+  _tb(ic,lb,ac){const b=document.createElement('button');b.type='button';b.innerHTML='<span class="material-symbols-outlined" style="font-size:16px">'+ic+'</span>';b.style.cssText=`display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:5px;border:none;cursor:pointer;background:${ac?'#b7006f':'transparent'};color:${ac?'#fff':'#666'};transition:all.15s`;b.title=lb;return b}
+  sm(m){this._er=m==='eraser';this._pb.style.background=this._er?'transparent':'#b7006f';this._pb.style.color=this._er?'#666':'#fff';this._eb.style.background=this._er?'#b7006f':'transparent';this._eb.style.color=this._er?'#fff':'#666';this.ca.style.cursor=this._er?'cell':'crosshair'}
+  _rs(){const r=this.c.getBoundingClientRect();const w=r.width||600;this.ca.width=w*this.dpr;this.ca.height=this.h*this.dpr;this.ca.style.height=this.h+'px';this.ca.style.width=w+'px';this.w=w}
+  _dbg(){const c=this.ctx;c.fillStyle='#fcfdff';c.fillRect(0,0,this.ca.width,this.ca.height);c.strokeStyle='#e2e7ff';c.lineWidth=1;for(let y=16*this.dpr;y<this.ca.height;y+=16*this.dpr){c.beginPath();c.moveTo(0,y+.5);c.lineTo(this.ca.width,y+.5);c.stroke()}}
+  _s(e){e.preventDefault();this._dr=true;this._d=true;const x=e.offsetX*this.dpr,y=e.offsetY*this.dpr;const c=this.ctx;c.beginPath();c.moveTo(x,y)
+  if(this._er){c.strokeStyle='#fcfdff';c.lineWidth=this.ES*this.dpr}else{c.strokeStyle='#1b1c1d';c.lineWidth=this._lw*this.dpr}
+  c.lineCap='round';c.lineJoin='round';this._lx=x;this._ly=y}
+  _m(e){if(!this._dr)return;e.preventDefault();const x=e.offsetX*this.dpr,y=e.offsetY*this.dpr;const c=this.ctx;c.beginPath();c.moveTo(this._lx,this._ly);c.lineTo(x,y)
+  if(this._er){c.strokeStyle='#fcfdff';c.lineWidth=this.ES*this.dpr}else{c.strokeStyle='#1b1c1d';c.lineWidth=this._lw*this.dpr}
+  c.lineCap='round';c.lineJoin='round';c.stroke();this._lx=x;this._ly=y}
+  _e(e){if(!this._dr)return;this._dr=false}
+  toD(mw){if(!this._d)return'';mw=mw||600;const w=this.ca.width,h=this.ca.height;if(w<=mw*this.dpr)return this.ca.toDataURL('image/png')
+  const s=(mw*this.dpr)/w,tw=Math.round(w*s),th=Math.round(h*s),tc=document.createElement('canvas');tc.width=tw;tc.height=th;tc.getContext('2d').drawImage(this.ca,0,0,tw,th);return tc.toDataURL('image/png')}
+  clear(){this._d=false;this._dbg()}
+  load(d){if(!d)return;this._d=true;const i=new Image();i.onload=()=>{this.ctx.drawImage(i,0,0,this.ca.width,this.ca.height)};i.src=d}
+  _ch(){}isEmpty(){return!this._d}
 }
 
-// =============== STATE HELPERS ===============
-const STATUS_NEXT = { pending:'done', done:'failed', failed:'pending' }
-const STATUS_ICON = { pending:'', done:'✓', failed:'✗' }
-const PERIOD_ICON = { manha:'🌅', tarde:'☀️', noite:'🌙' }
-const PERIOD_LABEL = { manha:'MANHA', tarde:'TARDE', noite:'NOITE' }
-const PERIOD_COLOR = { manha:'#b7006f', tarde:'#e67e22', noite:'#3b82f6' }
-
-function fmtDate(d) {
-  const meses = ['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
-  const dias = ['Domingo','Segunda-feira','Terca-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sabado']
-  return `${dias[d.getDay()]}, ${d.getDate()} de ${meses[d.getMonth()]} de ${d.getFullYear()}`
-}
-function dateStr(d) {
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+// Load data
+async function loadAll(){
+  if(!uid)return
+  const[t,ce]=await Promise.all([sb.from('tasks').select('*').eq('user_id',uid).order('task_date'),sb.from('commitments').select('*').eq('user_id',uid)])
+  if(!t.error&&t.data)alT=t.data;else alT=[]
+  if(!ce.error&&ce.data){alC={};ce.data.forEach(c=>{alC[c.commit_date]=c.drawing})}
+  // Today's tasks
+  const h=new Date(),hs=ds(h);tp={manha:[],tarde:[],noite:[]}
+  alT.filter(t=>t.task_date===hs).forEach(t=>{if(tp[t.period])tp[t.period].push(t)})
 }
 
-// =============== CALENDAR ===============
-function renderCalendar() {
-  const meses = ['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
-  $('cal-title').textContent = `${meses[curMonth]} ${curYear}`
-
-  const first = new Date(curYear, curMonth, 1).getDay()
-  const days = new Date(curYear, curMonth+1, 0).getDate()
-  const prevDays = new Date(curYear, curMonth, 0).getDate()
-  const hoje = new Date()
-  let html = ''
-
-  for (let d=prevDays-first+1; d<=prevDays; d++) html += `<div class="cal-cell other"><div class="cal-num">${d}</div></div>`
-
-  for (let d=1; d<=days; d++) {
-    const ehHoje = d===hoje.getDate() && curMonth===hoje.getMonth() && curYear===hoje.getFullYear()
-    const ds = `${curYear}-${String(curMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`
-    const td = allTasks.filter(t => t.task_date === ds)
-    const tem = { manha: td.some(t=>t.period==='manha'), tarde: td.some(t=>t.period==='tarde'), noite: td.some(t=>t.period==='noite') }
-    const compromisso = allCommitments[ds]
-    html += `<div class="cal-cell ${ehHoje?'today':''}" data-date="${ds}">
-      <div class="cal-num ${ehHoje?'today':''}">${d}</div>
-      ${compromisso ? `<img src="${compromisso}" style="max-height:28px;width:auto;display:block;margin-top:1px;border-radius:2px;border:1px solid #e0e0e2">` : ''}
-      ${td.slice(0,2).map(t => t.drawing ? `<img src="${t.drawing}" style="max-height:14px;width:auto;display:block;margin-top:1px;border-radius:1px">` : `<span style="font-size:9px;color:#555;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">${t.title||''}</span>`).join('')}
-      ${td.length > 2 ? `<span style="font-size:9px;color:#999">+${td.length-2}</span>` : ''}
-    </div>`
+// Calendar
+function renderCal(){
+  const m=['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
+  $('cal-t').textContent=m[cm]+' '+cy
+  const fi=new Date(cy,cm,1).getDay(),da=new Date(cy,cm+1,0).getDate(),pd=new Date(cy,cm,0).getDate(),ho=new Date()
+  let h=''
+  for(let d=pd-fi+1;d<=pd;d++)h+='<div class="cel other"><div class="cel-num">'+d+'</div></div>'
+  for(let d=1;d<=da;d++){
+    const eh=d===ho.getDate()&&cm===ho.getMonth()&&cy===ho.getFullYear(),sd=cy+'-'+String(cm+1).padStart(2,'0')+'-'+String(d).padStart(2,'0')
+    const co=alC[sd]||''
+    h+='<div class="cel '+(eh?'today':'')+'" data-d="'+sd+'"><div class="cel-num '+(eh?'today':'')+'">'+d+'</div><div class="cel-img">'+(co?'<img src="'+co+'" draggable="false">':'')+'</div></div>'
   }
+  const to=fi+da,re=to%7===0?0:7-(to%7)
+  for(let i=1;i<=re;i++)h+='<div class="cel other"><div class="cel-num">'+i+'</div></div>'
+  $('cal-g').innerHTML=h
+  // Square cells
+  const cw=Math.floor($('cal-g').querySelector('.cel').offsetWidth)
+  if(cw>60)$('cal-g').querySelectorAll('.cel').forEach(el=>{el.style.height=cw+'px'})
+  // Click
+  $('cal-g').querySelectorAll('.cel').forEach(el=>{el.addEventListener('click',()=>{slD=el.dataset.d;showDay(slD)})})
+}
 
-  const total = first + days
-  const rest = total%7===0 ? 0 : 7-(total%7)
-  for (let i=1; i<=rest; i++) html += `<div class="cal-cell other"><div class="cal-num">${i}</div></div>`
-
-  const grid = $('cal-grid')
-  grid.innerHTML = html
-
-  // Celulas quadradas: altura = largura real de cada coluna
-  const cellW = Math.floor(grid.querySelector('.cal-cell').offsetWidth)
-  if (cellW > 60) grid.querySelectorAll('.cal-cell').forEach(el => { el.style.height = cellW + 'px' })
-
-  grid.querySelectorAll('.cal-cell').forEach(el => {
-    el.addEventListener('click', () => {
-      selectedDate = el.dataset.date
-      showDayView(selectedDate)
+// Today panel
+function renderToday(){
+  const c=$('today-t')
+  if(!c)return
+  const h=new Date(),hs=ds(h),we=['Domingo','Segunda','Terca','Quarta','Quinta','Sexta','Sabado']
+  $('today-d').textContent=we[h.getDay()]+', '+h.getDate()+'/'+(h.getMonth()+1)
+  const all=[...tp.manha,...tp.tarde,...tp.noite]
+  if(all.length===0){c.innerHTML='<div style="text-align:center;padding:12px;color:#999;font-size:12px">Nenhuma tarefa hoje</div>';return}
+  c.innerHTML=''
+  for(const p of['manha','tarde','noite']){
+    const li=tp[p]
+    if(li.length===0)continue
+    const d=document.createElement('div')
+    d.style.cssText='margin-bottom:6px'
+    d.innerHTML='<div style="font-size:11px;font-weight:700;color:'+PC[p]+';padding:0 4px;margin-bottom:2px">'+PI[p]+' '+PL[p]+'</div>'
+    li.forEach(t=>{
+      const r=document.createElement('div');r.className='trow '+(t.status);r.style.cssText='cursor:default;padding:3px 6px;min-height:30px;border-radius:3px'
+      r.innerHTML='<div class="sc '+t.status+'" style="width:18px;height:18px;font-size:10px;border-width:1.5px">'+SI[t.status]+'</div>'+(t.drawing?'<img class="timg" src="'+t.drawing+'" style="max-height:20px">':'<span style="font-size:11px;color:#333">'+((t.title)||'')+'</span>')
+      r.querySelector('.sc').addEventListener('click',async e=>{e.stopPropagation();const ta=alT.find(x=>x.id===t.id);if(!ta)return;const ne=SN[ta.status];await sb.from('tasks').update({status:ne}).eq('id',t.id);await loadAll();renderCal();renderToday()})
+      d.appendChild(r)
     })
-  })
-}
-
-// =============== TODAY TASKS (Main Screen) ===============
-function renderTodayTasks() {
-  const container = $('today-tasks')
-  if (!container) return
-  const hoje = new Date()
-  const ds = dateStr(hoje)
-  const tarefas = allTasks.filter(t => t.task_date === ds)
-
-  if (tarefas.length === 0) {
-    container.innerHTML = `<div class="empty-state">Nenhuma tarefa hoje ✨</div>`
-    return
+    c.appendChild(d)
   }
-
-  container.innerHTML = ['manha','tarde','noite'].map(p => {
-    const lista = tarefas.filter(t => t.period === p)
-    if (lista.length === 0) return ''
-    return `
-      <div style="margin-bottom:8px">
-        <div style="font-size:11px;font-weight:700;color:${PERIOD_COLOR[p]};margin-bottom:2px;padding:0 4px">${PERIOD_ICON[p]} ${PERIOD_LABEL[p]}</div>
-        ${lista.map(t => `
-          <div class="task-row ${t.status}" style="cursor:default;padding:3px 6px;min-height:30px;border-radius:4px" data-id="${t.id}">
-            <div class="status-circle ${t.status}" style="width:18px;height:18px;font-size:10px;border-width:1.5px" data-id="${t.id}">${STATUS_ICON[t.status]}</div>
-            <div style="flex:1;min-width:0">
-              ${t.drawing ? `<img class="task-img" src="${t.drawing}" style="max-height:18px">` : `<span style="font-size:11px;color:#333">${t.title || ''}</span>`}
-            </div>
-          </div>
-        `).join('')}
-      </div>`
-  }).join('')
-
-  container.querySelectorAll('.status-circle').forEach(el => {
-    el.addEventListener('click', async (e) => {
-      e.stopPropagation()
-      const task = allTasks.find(t => t.id === el.dataset.id)
-      if (!task) return
-      const next = STATUS_NEXT[task.status]
-      await supabase.from('tasks').update({ status: next }).eq('id', el.dataset.id)
-      await loadAll(); renderCalendar(); renderTodayTasks()
-    })
-  })
 }
 
-// =============== DAY VIEW ===============
-async function showDayView(date) {
-  selectedDate = date
-  $('view-title').textContent = 'Dia'
-  $('calendar-view').style.display = 'none'
-  $('day-view-wrap').style.display = 'flex'
-  requestAnimationFrame(() => loadDayTasks(date))
+// Day view
+let _cPad=null,_cInit=false
+function showDay(date){
+  slD=date
+  $('v-cal').style.display='none';$('v-dia').style.display='flex'
+  $('day-t').textContent=fd(new Date(date.split('-')[0],+date.split('-')[1]-1,+date.split('-')[2]))
+  loadDayTasks(date)
 }
-
-function backToCalendar() {
-  $('day-view-wrap').style.display = 'none'
-  $('calendar-view').style.display = 'flex'
-  $('view-title').textContent = 'Agenda'
-  loadAll().then(() => { renderCalendar(); renderTodayTasks() })
-}
-
-async function loadDayTasks(date) {
-  const partes = date.split('-')
-  const dt = new Date(+partes[0], +partes[1]-1, +partes[2])
-  $('day-date').textContent = fmtDate(dt)
-
-  if (!userId) return
-  const { data, error } = await supabase.from('tasks').select('*')
-    .eq('user_id', userId).eq('task_date', date).order('created_at')
-  if (!error && data) dayTasks = data; else dayTasks = []
-  loadCommitForDay(date)
-
-  for (const p of ['manha','tarde','noite']) {
-    const container = $(`tasks-${p}`)
-    const lista = dayTasks.filter(t => t.period === p)
-    if (lista.length === 0) {
-      container.innerHTML = `<div class="empty-state">Nenhuma tarefa</div>`
-    } else {
-      container.innerHTML = lista.map(t => `
-        <div class="task-row ${t.status}" data-id="${t.id}">
-          <div class="status-circle ${t.status}" data-id="${t.id}">${STATUS_ICON[t.status]}</div>
-          <div style="flex:1;min-width:0">
-            ${t.drawing ? `<img class="task-img" src="${t.drawing}" draggable="false" style="width:100%;max-height:none;border-radius:4px">` : `<span style="font-size:14px;color:#333">${t.title || '(sem tarefa)'}</span>`}
-          </div>
-          <div style="display:flex;gap:4px;flex-shrink:0">
-            <button class="edit-task-btn" data-id="${t.id}" style="background:none;border:none;cursor:pointer;color:#666;padding:4px;border-radius:4px;font-size:14px" title="Editar">✏️</button>
-            <button class="del-task-btn" data-id="${t.id}" style="background:none;border:none;cursor:pointer;color:#ba1a1a;padding:4px;border-radius:4px;font-size:14px" title="Excluir">🗑️</button>
-          </div>
-        </div>
-      `).join('')
+function backCal(){$('v-dia').style.display='none';$('v-cal').style.display='flex';loadAll().then(()=>{renderCal();renderToday()})}
+async function loadDayTasks(date){
+  if(!uid)return
+  const{data,error}=await sb.from('tasks').select('*').eq('user_id',uid).eq('task_date',date).order('created_at')
+  const tasks=error||!data?[]:data
+  for(const p of['manha','tarde','noite']){
+    const cn=$('tsk-'+p),li=tasks.filter(t=>t.period===p)
+    if(li.length===0){cn.innerHTML='<div class="empty" style="text-align:center;padding:8px;color:#999;font-size:12px">Nenhuma tarefa</div>'}else{
+      cn.innerHTML=li.map(t=>'<div class="trow '+(t.status)+'" data-id="'+t.id+'"><div class="sc '+t.status+'" data-id="'+t.id+'">'+SI[t.status]+'</div><div style="flex:1;min-width:0">'+(t.drawing?'<img class="timg" src="'+t.drawing+'" draggable="false" style="max-height:36px">':'<span style="font-size:13px;color:#333">'+((t.title)||'')+'</span>')+'</div><div style="display:flex;gap:3px;flex-shrink:0"><button class="edt" data-id="'+t.id+'" style="background:none;border:none;cursor:pointer;color:#666;padding:3px;font-size:13px" title="Editar">\u270F\uFE0F</button><button class="dlt" data-id="'+t.id+'" style="background:none;border:none;cursor:pointer;color:#ba1a1a;padding:3px;font-size:13px" title="Excluir">\uD83D\uDDD1\uFE0F</button></div></div>').join('')
     }
-    // Status toggle
-    container.querySelectorAll('.status-circle').forEach(el => {
-      el.addEventListener('click', async (e) => {
-        e.stopPropagation()
-        const id = el.dataset.id
-        const task = dayTasks.find(t => t.id === id)
-        if (!task) return
-        const next = STATUS_NEXT[task.status]
-        await supabase.from('tasks').update({ status: next }).eq('id', id)
-        await loadDayTasks(date)
-      })
-    })
+    // Status
+    cn.querySelectorAll('.sc').forEach(el=>{el.addEventListener('click',async e=>{e.stopPropagation();const ta=tasks.find(x=>x.id===el.dataset.id);if(!ta)return;await sb.from('tasks').update({status:SN[ta.status]}).eq('id',el.dataset.id);await loadDayTasks(date)})})
     // Edit
-    container.querySelectorAll('.edit-task-btn').forEach(el => {
-      el.addEventListener('click', (e) => { e.stopPropagation(); editTask(el.dataset.id, date) })
-    })
+    cn.querySelectorAll('.edt').forEach(el=>{el.addEventListener('click',e=>{e.stopPropagation();editT(el.dataset.id,date)})})
     // Delete
-    container.querySelectorAll('.del-task-btn').forEach(el => {
-      el.addEventListener('click', (e) => { e.stopPropagation(); deleteTask(el.dataset.id, date) })
-    })
+    cn.querySelectorAll('.dlt').forEach(el=>{el.addEventListener('click',e=>{e.stopPropagation();delT(el.dataset.id,date)})})
   }
+  // Commitment
+  loadCommit()
 }
 
-// =============== ADD TASK (per period) ===============
-function setupAddTask(period) {
-  const btn = $(`add-btn-${period}`)
-  if (!btn) return
-  btn.onclick = () => {
-    const container = $(`tasks-${period}`)
-    if (container.querySelector('.inline-task-pad')) return
-    const wrap = document.createElement('div')
-    wrap.className = 'inline-task-pad'
-    wrap.style.cssText = 'border:1px solid #d0d0d2;border-radius:8px;margin:4px 0;padding:6px;background:#fff'
-    const padDiv = document.createElement('div')
-    padDiv.style.cssText = 'height:220px;width:100%;max-width:1406px;margin:0 auto'
-    wrap.appendChild(padDiv)
-    const actions = document.createElement('div')
-    actions.style.cssText = 'display:flex;gap:6px;justify-content:flex-end;margin-top:6px'
-    actions.innerHTML = `<button class="task-cancel" style="padding:6px 14px;border:none;border-radius:6px;cursor:pointer;font-size:13px;color:#666;background:#f0f0f2;font-weight:500">Cancelar</button><button class="task-save" style="padding:6px 20px;background:#b7006f;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600">Salvar</button>`
-    wrap.appendChild(actions)
-    if (container.querySelector('.empty-state')) container.innerHTML = ''
-    container.prepend(wrap)
-
-    const pad = new HandwritingPad(padDiv, { h: 220, clearable: true, toolbar: false })
-    wrap.querySelector('.task-cancel').onclick = () => wrap.remove()
-    wrap.querySelector('.task-save').onclick = async () => {
-      const drawing = pad.toDataURL()
-      if (!drawing) { toast('Escreva algo'); return }
-      await supabase.from('tasks').insert({ user_id: userId, task_date: selectedDate, period, drawing, title: '', status: 'pending' })
-      toast('Tarefa adicionada!')
-      wrap.remove()
-      await loadDayTasks(selectedDate)
-    }
-  }
+// Add task inline
+function addT(period){
+  const cn=$('tsk-'+period)
+  if(cn.querySelector('.ip'))return
+  const w=document.createElement('div');w.className='ip';w.style.cssText='border:1px solid #d0d0d2;border-radius:6px;margin:4px 0;padding:4px;background:#fff'
+  const pd=document.createElement('div');pd.style.cssText='height:140px;width:100%';w.appendChild(pd)
+  const ac=document.createElement('div');ac.style.cssText='display:flex;gap:4px;justify-content:flex-end;margin-top:4px'
+  ac.innerHTML='<button class="ipc" style="padding:5px 12px;border:none;border-radius:4px;cursor:pointer;font-size:12px;color:#666;background:#f0f0f2">Cancelar</button><button class="ips" style="padding:5px 16px;background:#b7006f;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600">Salvar</button>'
+  w.appendChild(ac)
+  const em=cn.querySelector('.empty');if(em)cn.innerHTML=''
+  cn.prepend(w)
+  const pad=new HP(pd,{h:140,toolbar:false})
+  w.querySelector('.ipc').onclick=()=>w.remove()
+  w.querySelector('.ips').onclick=async()=>{const dr=pad.toD();if(!dr){to('Escreva algo');return};await sb.from('tasks').insert({user_id:uid,task_date:slD,period,drawing:dr,title:'',status:'pending'});to('Tarefa adicionada!');w.remove();await loadDayTasks(slD)}
 }
 
-// =============== COMPROMISSO ===============
-let commitPad = null
+// Edit task
+async function editT(id,date){
+  const ta=alT.find(t=>t.id===id);if(!ta)return
+  const cn=$('tsk-'+ta.period);if(cn.querySelector('.ip'))return
+  const w=document.createElement('div');w.className='ip';w.style.cssText='border:1px solid #b7006f;border-radius:6px;margin:4px 0;padding:4px;background:#fff'
+  const pd=document.createElement('div');pd.style.cssText='height:140px;width:100%';w.appendChild(pd)
+  const ac=document.createElement('div');ac.style.cssText='display:flex;gap:4px;justify-content:flex-end;margin-top:4px'
+  ac.innerHTML='<button class="ipc" style="padding:5px 12px;border:none;border-radius:4px;cursor:pointer;font-size:12px;color:#666;background:#f0f0f2">Cancelar</button><button class="ips" style="padding:5px 16px;background:#b7006f;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600">Salvar</button>'
+  w.appendChild(ac)
+  cn.prepend(w)
+  const pad=new HP(pd,{h:140,toolbar:false})
+  if(ta.drawing)pad.load(ta.drawing)
+  w.querySelector('.ipc').onclick=()=>w.remove()
+  w.querySelector('.ips').onclick=async()=>{const dr=pad.toD();if(!dr){to('Escreva algo');return};await sb.from('tasks').update({drawing:dr}).eq('id',id);to('Tarefa atualizada!');w.remove();await loadDayTasks(date)}
+}
+async function delT(id,date){if(!confirm('Excluir tarefa?'))return;await sb.from('tasks').delete().eq('id',id);to('Excluida');await loadDayTasks(date)}
 
-function setupDayPad() {
-  if (!$('commit-save')) return
-  // Sera criado quando o dia for aberto (lazy)
+// Commitment
+async function loadCommit(){
+  if(!$('c-pad'))return
+  _cInit=true
+  if(_cPad){_cPad.wr.remove();_cPad=null}
+  _cPad=new HP($('c-pad'),{h:160,toolbar:true})
+  if(alC[slD])_cPad.load(alC[slD])
+  $('c-save').onclick=async()=>{const dr=_cPad.toD();if(!dr){to('Escreva o compromisso');return};await sb.from('commitments').upsert({user_id:uid,commit_date:slD,drawing:dr},{onConflict:'commit_date'});to('Compromisso salvo!');_cPad.clear();await loadAll();renderCal();renderToday();loadCommit()}
+  $('c-clr').onclick=async()=>{_cPad.clear();await sb.from('commitments').delete().eq('user_id',uid).eq('commit_date',slD);delete alC[slD];renderCal();to('Compromisso removido')}
 }
 
-function initCommitPad() {
-  if (commitPad) { commitPad.wr.remove(); commitPad = null }
-  commitPad = new HandwritingPad($('commit-pad'), { h: 220, clearable: true, toolbar: false })
+// Render
+function renderApp(){
+  $('app').innerHTML='<div style="width:100%;height:100dvh;display:flex;flex-direction:column;background:#fff">'
+    +'<header style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid #eee;flex-shrink:0;background:#fff">'
+    +'<h1 id="v-t" style="font-size:16px;font-weight:700;color:#b7006f;margin:0">Agenda</h1>'
+    +'<span style="font-size:12px;color:#999">Escrita Manual</span></header>'
+    // Calendar view
+    +'<div id="v-cal" style="flex:1;display:flex;overflow:hidden">'
+    +'<div style="flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:#fafafa;border-bottom:1px solid #eee">'
+    +'<div style="display:flex;align-items:center;gap:6px">'
+    +'<button id="pm" class="day-b" style="padding:3px 6px"><span class="material-symbols-outlined" style="font-size:18px">chevron_left</span></button>'
+    +'<span id="cal-t" style="font-size:14px;font-weight:600;min-width:140px;text-align:center"></span>'
+    +'<button id="nm" class="day-b" style="padding:3px 6px"><span class="material-symbols-outlined" style="font-size:18px">chevron_right</span></button></div>'
+    +'<button id="td-btn" class="day-b" style="font-size:12px">Hoje</button></div>'
+    +'<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;padding:2px 6px;background:#fafafa;border-bottom:1px solid #eee">'
+    +['Dom','Seg','Ter','Qua','Qui','Sex','Sab'].map(d=>'<div style="text-align:center;font-size:10px;font-weight:600;color:#999;padding:2px 0">'+d+'</div>').join('')+'</div>'
+    +'<div id="cal-g" class="cal"></div></div>'
+    // Today panel
+    +'<div style="width:190px;flex-shrink:0;display:flex;flex-direction:column;border-left:1px solid #eee;background:#fafafa">'
+    +'<div style="padding:8px 10px 4px;border-bottom:1px solid #eee"><div style="font-size:12px;font-weight:700;color:#b7006f">Hoje</div><div id="today-d" style="font-size:10px;color:#999;margin-top:1px"></div></div>'
+    +'<div id="today-t" style="flex:1;overflow-y:auto;padding:3px 6px 10px"><div style="text-align:center;padding:12px;color:#999;font-size:12px">Carregando...</div></div></div></div>'
+    // Day view
+    +'<div id="v-dia" style="flex:1;display:none;flex-direction:column;overflow:hidden">'
+    +'<div style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-bottom:1px solid #eee;background:#fafafa">'
+    +'<button id="b2c" class="day-b"><span class="material-symbols-outlined" style="font-size:18px">arrow_back</span> Voltar</button>'
+    +'<span id="day-t" style="font-size:15px;font-weight:600;color:#1b1c1d"></span></div>'
+    +'<div style="flex:1;overflow-y:auto;padding:6px 10px;max-width:1450px;margin:0 auto;width:100%">'
+    +['manha','tarde','noite'].map(p=>'<div class="psec"><div class="ph '+p+'"><span class="ph-c">'+PI[p]+' '+PL[p]+'</span><button class="add-'+p+'" style="padding:4px 10px;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600;color:'+PC[p]+';background:rgba(255,255,255,0.7)">+ Escrever</button></div><div id="tsk-'+p+'"><div style="text-align:center;padding:8px;color:#999;font-size:12px">Nenhuma tarefa</div></div></div>').join('')+''
+    // Commitment
+    +'<div style="border-top:1px solid #eee;margin-top:8px;padding:8px 0 12px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><span style="font-size:13px;font-weight:700;color:#1b1c1d">📌 Compromisso</span><button id="c-clr" class="day-b" style="font-size:11px;color:#999">Limpar</button></div>'
+    +'<div id="c-pad" style="width:100%;max-width:1406px;min-height:160px;margin:0 auto 6px"></div>'
+    +'<div style="display:flex;justify-content:flex-end"><button id="c-save" style="padding:6px 20px;background:#b7006f;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer">Salvar Compromisso</button></div></div></div></div>'
+    +'<div id="toast"></div></div>'
 
-  $('commit-save').onclick = async () => {
-    const drawing = commitPad.toDataURL()
-    if (!drawing) { toast('Escreva o compromisso com a caneta'); return }
-    const { error } = await supabase.from('commitments').upsert({
-      user_id: userId, commit_date: selectedDate, drawing
-    }, { onConflict: 'commit_date' })
-    if (error) { toast('Erro: '+error.message); return }
-    toast('Compromisso salvo!')
-    commitPad.clear()
-    await loadAll()
-    renderCalendar()
-    renderTodayTasks()
-    await loadDayTasks(selectedDate)
-    loadCommitForDay(selectedDate)
-  }
-
-  $('commit-clear').onclick = async () => {
-    commitPad.clear()
-    await supabase.from('commitments').delete().eq('user_id', userId).eq('commit_date', selectedDate)
-    delete allCommitments[selectedDate]
-    renderCalendar()
-    loadCommitForDay(selectedDate)
-  }
+  $('pm').onclick=()=>{cm--;if(cm<0){cm=11;cy--}renderCal()}
+  $('nm').onclick=()=>{cm++;if(cm>11){cm=0;cy++}renderCal()}
+  $('td-btn').onclick=()=>{const d=new Date();cm=d.getMonth();cy=d.getFullYear();renderCal()}
+  $('b2c').onclick=backCal
+  for(const p of['manha','tarde','noite'])$('tsk-'+p).parentElement.querySelector('.add-'+p).onclick=()=>addT(p)
+  loadAll().then(()=>{renderCal();renderToday()})
 }
 
-async function loadCommitForDay(date) {
-  if (!commitPad) { initCommitPad(); await new Promise(r => setTimeout(r, 50)) }
-  commitPad.clear()
-  const drawing = allCommitments[date]
-  if (drawing) commitPad.load(drawing)
+async function init(){
+  try{
+    const{d:{session}}=await sb.auth.getSession()
+    if(session?.user){uid=session.user.id;renderApp()}
+    else{const{data,error}=await sb.auth.signInAnonymously();if(error)throw error;uid=data.user.id;renderApp()}
+  }catch(e){$('app').innerHTML='<div style="text-align:center;padding:40px;color:#ba1a1a"><h2>Erro</h2><p>'+e.message+'</p><button onclick="location.reload()" style="margin-top:16px;padding:12px 24px;background:#b7006f;color:#fff;border:none;border-radius:8px;cursor:pointer">Tentar</button></div>'}
 }
-
-// =============== EDIT / DELETE TASK ===============
-async function editTask(id, date, fromHome) {
-  const task = (fromHome ? allTasks : dayTasks).find(t => t.id === id)
-  if (!task) return
-  const container = fromHome ? $('today-tasks') : $(`tasks-${task.period}`)
-  if ($('inline-pad')) return
-
-  const wrap = document.createElement('div')
-  wrap.id = 'inline-pad'
-  wrap.className = 'add-area'
-  wrap.style.cssText = 'border:2px solid #b7006f;border-radius:8px;margin:4px 0;background:#fff;overflow:hidden'
-
-  const header = document.createElement('div')
-  header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:4px 8px;background:#fafafa;border-bottom:1px solid #e5e7eb;font-size:12px;font-weight:600;color:#b7006f'
-  header.textContent = `${PERIOD_ICON[task.period]} Editando tarefa`
-  wrap.appendChild(header)
-
-  const body = document.createElement('div')
-  body.style.cssText = 'padding:6px'
-  const padDiv = document.createElement('div')
-  padDiv.id = 'pad-inline-edit'
-  padDiv.style.cssText = 'height:220px;width:100%;max-width:1406px;margin:0 auto'
-  body.appendChild(padDiv)
-
-  const actions = document.createElement('div')
-  actions.style.cssText = 'display:flex;gap:8px;justify-content:flex-end;padding:6px'
-  const cancelBtn = document.createElement('button')
-  cancelBtn.textContent = 'Cancelar'
-  cancelBtn.style.cssText = 'padding:6px 16px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:#666;background:#f0f0f2'
-  const saveBtn = document.createElement('button')
-  saveBtn.textContent = 'Salvar'
-  saveBtn.style.cssText = 'padding:6px 16px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;color:#fff;background:#b7006f'
-  actions.appendChild(cancelBtn)
-  actions.appendChild(saveBtn)
-  body.appendChild(actions)
-  wrap.appendChild(body)
-
-  container.prepend(wrap)
-  const pad = new HandwritingPad(padDiv, { h: 220, clearable: true })
-  if (task.drawing) pad.load(task.drawing)
-
-  cancelBtn.onclick = () => wrap.remove()
-  saveBtn.onclick = async () => {
-    const drawing = pad.toDataURL()
-    if (!drawing) { toast('Escreva algo ou cancele'); return }
-    await supabase.from('tasks').update({ drawing }).eq('id', id)
-    toast('Tarefa atualizada!')
-    wrap.remove()
-    if (fromHome) { await loadAll(); renderCalendar(); renderTodayTasks() }
-    else await loadDayTasks(date)
-  }
-}
-
-async function deleteTask(id, date, fromHome) {
-  if (!confirm('Excluir esta tarefa?')) return
-  await supabase.from('tasks').delete().eq('id', id)
-  toast('Tarefa excluida')
-  if (fromHome) { await loadAll(); renderCalendar(); renderTodayTasks() }
-  else await loadDayTasks(date)
-}
-
-// =============== RENDER APP ===============
-function renderApp() {
-  $('app').innerHTML = `
-    <div id="app-screen" style="width:100%;max-width:100%;height:100vh;height:100dvh;display:flex;flex-direction:column;background:#fff">
-      <header style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #f0f0f2;flex-shrink:0;background:#fff">
-        <h1 id="view-title" style="font-size:18px;font-weight:700;color:#b7006f;margin:0">Agenda</h1>
-        <span style="font-size:13px;color:#999">Escrita Manual</span>
-      </header>
-
-      <!-- CALENDAR VIEW -->
-      <div id="calendar-view" style="flex:1;display:flex;overflow:hidden">
-        <!-- Calendar main (left) -->
-        <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0">
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#fff;border-bottom:1px solid #f0f0f2">
-            <div style="display:flex;align-items:center;gap:6px">
-              <button id="prev-month" class="back-btn" style="padding:4px 6px"><span class="material-symbols-outlined">chevron_left</span></button>
-              <span id="cal-title" style="font-size:15px;font-weight:600;min-width:150px;text-align:center"></span>
-              <button id="next-month" class="back-btn" style="padding:4px 6px"><span class="material-symbols-outlined">chevron_right</span></button>
-            </div>
-            <button id="today-btn" class="back-btn" style="font-size:12px">Hoje</button>
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;padding:2px 6px;background:#fafafa;border-bottom:1px solid #f0f0f2">
-            ${['Dom','Seg','Ter','Qua','Qui','Sex','Sab'].map(d => `<div style="text-align:center;font-size:10px;font-weight:600;color:#999;padding:3px 0">${d}</div>`).join('')}
-          </div>
-          <div id="cal-grid" class="cal-grid" style="flex:1;padding:3px 6px 6px;overflow-y:auto"></div>
-        </div>
-        <!-- Today tasks panel (right) -->
-        <div style="width:180px;flex-shrink:0;display:flex;flex-direction:column;border-left:1px solid #f0f0f2;background:#fafafa">
-          <div style="padding:10px 10px 6px;border-bottom:1px solid #f0f0f2">
-            <span style="font-size:13px;font-weight:700;color:#b7006f">Hoje</span>
-          </div>
-          <div id="today-tasks" style="flex:1;overflow-y:auto;padding:3px 6px 12px">
-            <div class="empty-state">Carregando...</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- DAY VIEW -->
-      <div id="day-view-wrap" style="flex:1;display:none;flex-direction:column;overflow:hidden">
-        <div style="display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid #f0f0f2;background:#fafafa">
-          <button id="back-to-cal" class="back-btn"><span class="material-symbols-outlined" style="font-size:20px">arrow_back</span> Voltar</button>
-          <span id="day-date" class="date-title" style="font-size:17px;font-weight:600"></span>
-        </div>
-        <div style="flex:1;overflow-y:auto;padding:4px 0" class="day-view">
-          ${['manha','tarde','noite'].map(p => `
-            <div class="period-section">
-              <div class="period-header ${p}">
-                <span class="period-title ${p}">${PERIOD_ICON[p]} ${PERIOD_LABEL[p]}</span>
-                <button id="add-btn-${p}" class="back-btn" style="font-size:13px;font-weight:600;color:${PERIOD_COLOR[p]}">
-                  <span class="material-symbols-outlined" style="font-size:18px">add</span> Escrever
-                </button>
-              </div>
-              <div id="tasks-${p}"><div class="empty-state">Nenhuma tarefa</div></div>
-            </div>
-          `).join('')}
-        </div>
-        <!-- Compromisso area fixed at bottom -->
-        <div style="border-top:1px solid #e0e0e2;background:#fff;padding:8px 12px 12px;flex-shrink:0">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-            <span style="font-size:13px;font-weight:700;color:#1b1c1d">📌 Compromisso</span>
-            <button id="commit-clear" class="back-btn" style="font-size:11px;color:#999">Limpar</button>
-          </div>
-          <div id="commit-pad" style="margin-bottom:6px;min-height:220px;width:100%;max-width:1406px;margin:0 auto 6px"></div>
-          <div style="display:flex;gap:6px;align-items:center;justify-content:flex-end">
-            <button id="commit-save" style="padding:7px 20px;background:#b7006f;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer">Salvar Compromisso</button>
-          </div>
-        </div>
-      </div>
-
-      <div id="toast"></div>
-    </div>`
-
-  // Navigation
-  $('prev-month').onclick = () => { curMonth--; if(curMonth<0){curMonth=11;curYear--} renderCalendar() }
-  $('next-month').onclick = () => { curMonth++; if(curMonth>11){curMonth=0;curYear++} renderCalendar() }
-  $('today-btn').onclick = () => { const d=new Date(); curMonth=d.getMonth(); curYear=d.getFullYear(); renderCalendar() }
-  $('back-to-cal').onclick = backToCalendar
-
-  for (const p of ['manha','tarde','noite']) setupAddTask(p)
-  setupDayPad()
-
-  loadAll().then(() => { renderCalendar(); renderTodayTasks() })
-}
-
-async function loadAll() {
-  if (!userId) return
-  const { data, error } = await supabase.from('tasks').select('*').eq('user_id', userId).order('task_date')
-  if (!error && data) allTasks = data; else allTasks = []
-  const { data: cd, error: ce } = await supabase.from('commitments').select('*').eq('user_id', userId)
-  if (!ce && cd) { allCommitments = {}; cd.forEach(c => { allCommitments[c.commit_date] = c.drawing }) }
-}
-
-// =============== INIT ===============
-async function init() {
-  try {
-    const { data: { session } } = await supabase.auth.getSession()
-    if (session?.user) { userId = session.user.id; renderApp() }
-    else {
-      const { data, error } = await supabase.auth.signInAnonymously()
-      if (error) throw error; userId = data.user.id; renderApp()
-    }
-  } catch(e) {
-    $('app').innerHTML = `<div style="text-align:center;padding:40px;color:#ba1a1a"><h2>Erro</h2><p>${e.message}</p><button onclick="location.reload()" style="margin-top:16px;padding:12px 24px;background:#b7006f;color:#fff;border:none;border-radius:8px;cursor:pointer">Tentar</button></div>`
-  }
-}
-
-supabase.auth.onAuthStateChange((event, session) => {
-  if (event==='SIGNED_IN' && session?.user && !userId) { userId = session.user.id; renderApp() }
-})
-
+sb.auth.onAuthStateChange((e,session)=>{if(e==='SIGNED_IN'&&session?.user&&!uid){uid=session.user.id;renderApp()}})
 init()
 </script>
 </body>
