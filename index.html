@@ -266,7 +266,7 @@ function renderApp(){
 
 async function init(){
   try{
-    const{d:{session}}=await sb.auth.getSession()
+    const{data:{session}}=await sb.auth.getSession()
     if(session?.user){uid=session.user.id;renderApp()}
     else{const{data,error}=await sb.auth.signInAnonymously();if(error)throw error;uid=data.user.id;renderApp()}
   }catch(e){$('app').innerHTML='<div style="text-align:center;padding:40px;color:#ba1a1a"><h2>Erro</h2><p>'+e.message+'</p><button onclick="location.reload()" style="margin-top:16px;padding:12px 24px;background:#b7006f;color:#fff;border:none;border-radius:8px;cursor:pointer">Tentar</button></div>'}
