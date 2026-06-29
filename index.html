@@ -44,7 +44,7 @@ body{margin:0;font-family:'Inter',sans-serif;background:#faf9fe;color:#1a1b1f;-w
 <script type="module">
 import{createClient}from'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
 const sb=createClient('https://pftjojkgzgthayfabhhf.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmdGpvamtnemd0aGF5ZmFiaGhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNDE5MjcsImV4cCI6MjA5NjYxNzkyN30.CfqAZjKmiDexilbRMMRWl54-UZPVGz9Abu3tXpaQ0y4')
-let uid=null,cm=(new Date).getMonth(),cy=(new Date).getFullYear(),alT=[],alC={},slD=''
+let uid=null,cm=(new Date).getMonth(),cy=(new Date).getFullYear(),alT=[],alC={},slD='',vM='month',ws=0
 const $=id=>document.getElementById(id),to=m=>{const t=$('toast');if(!t)return;t.textContent=m;t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),2000)}
 const SN={pending:'done',done:'failed',failed:'pending'}
 function ds(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
@@ -112,6 +112,27 @@ function renderHoje(){
     (t.status!=='pending'?'<span class="material-symbols-outlined" style="font-size:8px;color:#fff;display:flex;align-items:center;justify-content:center;width:12px;height:12px">'+(t.status==='done'?'check':'close')+'</span>':'')+'</div>'+
     (t.drawing?'<img src="'+t.drawing+'" style="max-height:20px;width:100%;object-fit:contain">':'<span style="font-size:12px;color:#333">'+(t.title||'')+'</span>')+'</div>').join('')
 }
+function renderWeek(){
+  const sd=new Date(ws),meses=['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
+  const dias=['DOM','SEG','TER','QUA','QUI','SEX','SAB'],hoje=new Date()
+  $('cal-t').textContent=meses[sd.getMonth()]+' '+sd.getFullYear()
+  let html=''
+  for(let i=0;i<7;i++){
+    const d=new Date(sd);d.setDate(d.getDate()+i)
+    const eh=d.toDateString()===hoje.toDateString(),sd2=ds(d),co=alC[sd2]||'',ts=alT.filter(t=>t.task_date===sd2)
+    html+='<div class="day-cell '+(eh?'today':'')+'" data-d="'+sd2+'" style="display:flex;flex-direction:column;padding:6px;border-right:'+(i<6?'1px solid #e5e5ea':'none')+'">'
+    +'<div style="text-align:center;margin-bottom:4px"><div style="font-family:JetBrains Mono;font-size:10px;color:#5f5e5e">'+dias[i]+'</div>'
+    +'<div style="font-family:Hanken Grotesk;font-size:22px;font-weight:700;color:'+(eh?'#0459c5':'#1a1b1f')+';line-height:1.2">'+d.getDate()+'</div></div>'
+    // Commitment
+    +(co?'<div style="flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:4px"><img src="'+co+'" style="max-height:60px;max-width:100%;object-fit:contain;border-radius:3px"></div>':'')
+    // Tasks
+    +ts.slice(0,2).map(t=>t.drawing?'<img src="'+t.drawing+'" style="max-height:20px;width:100%;object-fit:contain;margin-top:1px;border-radius:2px">':'<div style="font-size:11px;color:#333;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+((t.title)||'')+'</div>').join('')
+    +(ts.length>2?'<div style="font-size:9px;color:#999;margin-top:2px">+'+(ts.length-2)+'</div>':'')
+    +'</div>'
+  }
+  $('week-g').innerHTML=html
+  $('week-g').querySelectorAll('.day-cell').forEach(el=>{el.addEventListener('click',()=>{slD=el.dataset.d;openOv(slD)})})
+}
 function openOv(d){
   slD=d;const dt=new Date(d.split('-')[0],+d.split('-')[1]-1,+d.split('-')[2]),w=['Domingo','Segunda-feira','Terca-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sabado']
   $('ov-tit').textContent=w[dt.getDay()]+', '+dt.getDate();$('ov-sub').textContent=mn(dt.getMonth()).toUpperCase()+' '+dt.getFullYear()
@@ -155,7 +176,10 @@ function renderApp(){
   $('app').innerHTML='<div style="display:flex;flex-direction:column;height:100dvh;background:#faf9fe">'
     +'<header style="display:flex;align-items:center;justify-content:space-between;padding:6px 20px;background:#fff;border-bottom:1px solid #e5e5ea;flex-shrink:0;min-height:48px">'
     +'<div style="display:flex;align-items:center;gap:10px">'
-    +'<span style="font-family:Hanken Grotesk;font-size:18px;font-weight:700;color:#0459c5">Minha Agenda</span></div>'
+    +'<span style="font-family:Hanken Grotesk;font-size:18px;font-weight:700;color:#0459c5">Minha Agenda</span>'
+    +'<div style="display:flex;background:#f4f3f8;border-radius:6px;padding:2px;margin-left:8px">'
+    +'<button id="v-mes" style="padding:3px 10px;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600;background:#fff;color:#0459c5">M\u00EAs</button>'
+    +'<button id="v-sem" style="padding:3px 10px;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:500;background:transparent;color:#5f5e5e">Semana</button></div></div>'
     +'<div style="display:flex;align-items:center;gap:4px">'
     +'<button id="pm" style="padding:3px 6px;border:none;border-radius:4px;cursor:pointer;background:#f4f3f8;display:flex;align-items:center"><span class="material-symbols-outlined" style="font-size:18px">chevron_left</span></button>'
     +'<span id="cal-t" style="font-family:Hanken Grotesk;font-size:13px;font-weight:600;min-width:100px;text-align:center"></span>'
@@ -169,12 +193,18 @@ function renderApp(){
     +'<div id="hoje-l" style="border-top:1px solid #e5e5ea;padding-top:6px"><div style="font-size:13px;color:#999;padding:8px 0;font-family:Architects Daughter">Carregando...</div></div>'
     +'<div style="margin-top:auto;border-top:1px solid #e5e5ea;padding-top:10px">'
     +'<button id="nv-tk" style="width:100%;padding:8px;background:#0459c5;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:4px"><span class="material-symbols-outlined" style="font-size:16px">add</span> Nova Tarefa</button></div></aside>'
-    // Calendar
+    // Calendar container
     +'<main style="flex:1;display:flex;flex-direction:column;overflow:hidden;padding:10px;background:#faf9fe">'
     +'<div style="max-width:1200px;margin:0 auto;width:100%;background:#fff;border-radius:10px;overflow:hidden;border:1px solid #e5e5ea;display:flex;flex-direction:column;flex:1">'
+    // Month view
+    +'<div id="month-v" style="display:flex;flex-direction:column;flex:1;overflow:hidden">'
     +'<div style="display:grid;grid-template-columns:repeat(7,1fr);background:#f4f3f8;border-bottom:1px solid #e5e5ea">'
     +['DOM','SEG','TER','QUA','QUI','SEX','SAB'].map((d,i)=>'<div style="padding:6px 0;text-align:center;font-family:JetBrains Mono;font-size:10px;font-weight:500;color:'+(i===0?'#ba1a1a':'#5f5e5e')+'">'+d+'</div>').join('')+'</div>'
-    +'<div id="cal-g" class="cal-grid" style="flex:1"></div></div></main></div>'
+    +'<div id="cal-g" class="cal-grid" style="flex:1"></div></div>'
+    // Week view
+    +'<div id="week-v" style="display:none;flex-direction:column;flex:1">'
+    +'<div id="week-g" style="display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:1fr;flex:1"></div></div>'
+    +'</div></main></div>'
     // Overlay
     +'<div id="ov" class="ov"><div class="ov-c"><div style="padding:14px 18px;border-bottom:1px solid #e5e5ea;display:flex;justify-content:space-between;align-items:flex-start">'
     +'<div><h3 id="ov-tit" style="font-family:Hanken Grotesk;font-size:17px;font-weight:600;margin:0"></h3><p id="ov-sub" style="font-size:12px;color:#5f5e5e;margin:2px 0 0"></p></div>'
@@ -188,10 +218,19 @@ function renderApp(){
     +'<button id="ov-cm-sv" style="padding:4px 16px;background:#0459c5;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:11px;font-weight:600">Salvar</button></div></div></div></div>'
     +'<div id="toast"></div></div>'
 
-  const h=new Date();cm=h.getMonth();cy=h.getFullYear()
-  $('pm').onclick=()=>{cm--;if(cm<0){cm=11;cy--}renderCal()}
-  $('nm').onclick=()=>{cm++;if(cm>11){cm=0;cy++}renderCal()}
-  $('tb').onclick=()=>{const d=new Date();cm=d.getMonth();cy=d.getFullYear();renderCal()}
+  // Week start = Monday of current week
+  const now=new Date();const d=new Date(now);d.setDate(d.getDate()-((d.getDay()+6)%7));ws=ds(d);cm=now.getMonth();cy=now.getFullYear()
+  $('pm').onclick=()=>{
+    if(vM==='month'){cm--;if(cm<0){cm=11;cy--}renderCal()}
+    else{const d=new Date(ws);d.setDate(d.getDate()-7);ws=ds(d);renderWeek()}}
+  $('nm').onclick=()=>{
+    if(vM==='month'){cm++;if(cm>11){cm=0;cy++}renderCal()}
+    else{const d=new Date(ws);d.setDate(d.getDate()+7);ws=ds(d);renderWeek()}}
+  $('tb').onclick=()=>{
+    if(vM==='month'){const d=new Date();cm=d.getMonth();cy=d.getFullYear();renderCal()}
+    else{const d=new Date();d.setDate(d.getDate()-((d.getDay()+6)%7));ws=ds(d);renderWeek()}}
+  $('v-mes').onclick=()=>{vM='month';$('v-mes').style.cssText='padding:3px 10px;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600;background:#fff;color:#0459c5';$('v-sem').style.cssText='padding:3px 10px;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:500;background:transparent;color:#5f5e5e';$('month-v').style.display='flex';$('week-v').style.display='none';renderCal()}
+  $('v-sem').onclick=()=>{vM='week';$('v-sem').style.cssText='padding:3px 10px;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600;background:#fff;color:#0459c5';$('v-mes').style.cssText='padding:3px 10px;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:500;background:transparent;color:#5f5e5e';$('month-v').style.display='none';$('week-v').style.display='flex';renderWeek()}
   $('nv-tk').onclick=()=>{const d=ds(new Date());slD=d;openOv(d)}
   setupOv()
   loadAll().then(()=>{renderCal();renderHoje()})
